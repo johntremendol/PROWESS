@@ -4,9 +4,19 @@ import { Group, Debt } from "../types";
 // Support both standard process.env (Node/Webpack) and Vite's import.meta.env
 const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || (typeof process !== 'undefined' ? process.env.API_KEY : undefined);
 
-const ai = new GoogleGenAI({ apiKey });
+let ai: GoogleGenAI | null = null;
+if (apiKey) {
+  try {
+    ai = new GoogleGenAI({ apiKey });
+  } catch (e) {
+    console.error("Failed to initialize Gemini client:", e);
+  }
+}
 
 export const analyzeExpenses = async (group: Group, debts: Debt[]) => {
+  if (!ai) {
+    return "Analysis unavailable: API key missing. Please set VITE_GEMINI_API_KEY in .env";
+  }
   try {
     const memberMap = group.members.reduce((acc, m) => ({ ...acc, [m.id]: m.name }), {} as Record<string, string>);
 
@@ -54,6 +64,7 @@ export const analyzeExpenses = async (group: Group, debts: Debt[]) => {
 };
 
 export const suggestSplitCategory = async (description: string): Promise<string> => {
+  if (!ai) return 'General';
   try {
      const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',

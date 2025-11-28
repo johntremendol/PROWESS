@@ -12,11 +12,15 @@ export default {
       },
       colors: {
         prowess: {
-          red: '#C83E36',
-          dark: '#121212',
-          card: '#1C1C1C',
-          text: '#E5E5E5',
-          muted: '#A3A3A3'
+          black: '#000000',
+          grey: '#9A9287',
+          red: '#CC342C',
+          beige: '#D6CFBF',
+          // Keeping legacy for safe removal if needed, but mapping to new palette
+          dark: '#000000', 
+          card: '#0A0A0A',
+          text: '#D6CFBF',
+          muted: '#9A9287'
         }
       },
       animation: {
