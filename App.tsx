@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { AppView } from './types';
 import SplitterApp from './apps/splitter/SplitterApp';
-import { Plus, DollarSign } from './components/ui/Icons';
+import { Plus } from './components/ui/Icons';
 
 function App() {
   const [currentApp, setCurrentApp] = useState<AppView>(AppView.LAUNCHER);
