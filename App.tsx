@@ -3,6 +3,7 @@ import { AppView } from './types';
 import SplitterApp from './apps/splitter/SplitterApp';
 import { Plus } from './components/ui/Icons';
 import prowessLogo from './assets/prowesslogo.png';
+import splitterLogo from './assets/splitterlogo.png';
 
 function App() {
   const [currentApp, setCurrentApp] = useState<AppView>(AppView.LAUNCHER);
@@ -30,9 +31,13 @@ function App() {
             {/* Splitter Button */}
             <button 
               onClick={() => setCurrentApp(AppView.SPLITTER)}
-              className="w-36 h-36 rounded-[2rem] border-[2px] border-prowess-beige text-prowess-beige flex items-center justify-center hover:bg-prowess-beige hover:text-black transition-colors group"
+              className="w-36 h-36 rounded-[2rem] border-[2px] border-prowess-beige text-prowess-beige flex items-center justify-center hover:bg-prowess-beige hover:text-black transition-colors group overflow-hidden p-4"
             >
-              <span className="font-serif text-7xl font-light relative top-1 italic">$</span>
+              <img 
+                src={splitterLogo} 
+                alt="Splitter" 
+                className="w-full h-full object-contain filter brightness-100 group-hover:brightness-0 transition-all" 
+              />
             </button>
 
             {/* Suggest/Add Button */}
