@@ -49,7 +49,7 @@ function App() {
         </div>
 
         {/* Footer Text */}
-        <div className="text-prowess-beige tracking-[0.4em] text-xs font-optician font-bold">
+        <div className="text-prowess-beige tracking-[0.4em] text-xs font-optician">
           APPS
         </div>
       </div>

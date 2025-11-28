@@ -4,21 +4,21 @@
 
 @font-face {
   font-family: 'Instrument Serif';
-  src: url('/src/assets/fonts/InstrumentSerif-Regular.ttf') format('truetype');
+  src: url('./src/assets/fonts/InstrumentSerif-Regular.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: 'Instrument Serif';
-  src: url('/src/assets/fonts/InstrumentSerif-Italic.ttf') format('truetype');
+  src: url('./src/assets/fonts/InstrumentSerif-Italic.ttf') format('truetype');
   font-weight: normal;
   font-style: italic;
 }
 
 @font-face {
   font-family: 'Optician Sans';
-  src: url('/src/assets/fonts/Optician-Sans.otf') format('opentype');
+  src: url('./src/assets/fonts/Optician-Sans.otf') format('opentype');
   font-weight: normal;
   font-style: normal;
 }
