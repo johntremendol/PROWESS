@@ -7,21 +7,48 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        serif: ['"Instrument Serif"', 'serif'],
-        sans: ['"Inter"', 'sans-serif'],
+        // Primary fonts mapped to CSS variables for consistency
+        display: ['var(--font-display)'],
+        body: ['var(--font-body)'],
+        mono: ['var(--font-mono)'],
+        ui: ['var(--font-ui)'],
+        // Legacy aliases (use the above instead)
+        serif: ['"Instrument Serif"', 'Georgia', 'serif'],
         optician: ['"Optician Sans"', 'sans-serif'],
+      },
+      fontSize: {
+        'xs': ['var(--text-xs)', { lineHeight: 'var(--leading-normal)' }],
+        'sm': ['var(--text-sm)', { lineHeight: 'var(--leading-normal)' }],
+        'base': ['var(--text-base)', { lineHeight: 'var(--leading-normal)' }],
+        'lg': ['var(--text-lg)', { lineHeight: 'var(--leading-normal)' }],
+        'xl': ['var(--text-xl)', { lineHeight: 'var(--leading-tight)' }],
+        '2xl': ['var(--text-2xl)', { lineHeight: 'var(--leading-tight)' }],
+        '3xl': ['var(--text-3xl)', { lineHeight: 'var(--leading-tight)' }],
+        '4xl': ['var(--text-4xl)', { lineHeight: 'var(--leading-none)' }],
+        '5xl': ['var(--text-5xl)', { lineHeight: 'var(--leading-none)' }],
+        '6xl': ['var(--text-6xl)', { lineHeight: 'var(--leading-none)' }],
+        '7xl': ['var(--text-7xl)', { lineHeight: 'var(--leading-none)' }],
+      },
+      letterSpacing: {
+        tighter: 'var(--tracking-tighter)',
+        tight: 'var(--tracking-tight)',
+        normal: 'var(--tracking-normal)',
+        wide: 'var(--tracking-wide)',
+        wider: 'var(--tracking-wider)',
+        widest: 'var(--tracking-widest)',
+        mega: 'var(--tracking-mega)',
       },
       colors: {
         prowess: {
-          black: '#000000',
-          grey: '#9A9287',
-          red: '#CC342C',
-          beige: '#D6CFBF',
-          // Keeping legacy for safe removal if needed, but mapping to new palette
-          dark: '#000000', 
-          card: '#0A0A0A',
-          text: '#D6CFBF',
-          muted: '#9A9287'
+          black: 'var(--color-black)',
+          grey: 'var(--color-grey)',
+          red: 'var(--color-red)',
+          beige: 'var(--color-beige)',
+          // Semantic aliases
+          bg: 'var(--color-black)',
+          text: 'var(--color-beige)',
+          muted: 'var(--color-grey)',
+          accent: 'var(--color-red)',
         }
       },
       animation: {

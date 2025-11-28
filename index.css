@@ -2,30 +2,141 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==========================================================================
+   DESIGN TOKENS - Typography
+   ========================================================================== */
+
+/* Font Face Definitions */
 @font-face {
   font-family: 'Instrument Serif';
   src: url('./src/assets/fonts/InstrumentSerif-Regular.ttf') format('truetype');
-  font-weight: normal;
+  font-weight: 400;
   font-style: normal;
+  font-display: swap;
 }
 
 @font-face {
   font-family: 'Instrument Serif';
   src: url('./src/assets/fonts/InstrumentSerif-Italic.ttf') format('truetype');
-  font-weight: normal;
+  font-weight: 400;
   font-style: italic;
+  font-display: swap;
 }
 
 @font-face {
   font-family: 'Optician Sans';
   src: url('./src/assets/fonts/Optician-Sans.otf') format('opentype');
-  font-weight: normal;
+  font-weight: 400;
   font-style: normal;
+  font-display: swap;
 }
 
+/* ==========================================================================
+   CSS Custom Properties (Design Tokens)
+   ========================================================================== */
+:root {
+  /* Font Families */
+  --font-display: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+  --font-body: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+  --font-mono: 'Optician Sans', 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+  --font-ui: 'Optician Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Font Sizes - Using a modular scale */
+  --text-xs: 0.75rem;    /* 12px */
+  --text-sm: 0.875rem;   /* 14px */
+  --text-base: 1rem;     /* 16px */
+  --text-lg: 1.125rem;   /* 18px */
+  --text-xl: 1.25rem;    /* 20px */
+  --text-2xl: 1.5rem;    /* 24px */
+  --text-3xl: 1.875rem;  /* 30px */
+  --text-4xl: 2.25rem;   /* 36px */
+  --text-5xl: 3rem;      /* 48px */
+  --text-6xl: 3.75rem;   /* 60px */
+  --text-7xl: 4.5rem;    /* 72px */
+
+  /* Font Weights */
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* Line Heights */
+  --leading-none: 1;
+  --leading-tight: 1.25;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose: 2;
+
+  /* Letter Spacing */
+  --tracking-tighter: -0.05em;
+  --tracking-tight: -0.025em;
+  --tracking-normal: 0em;
+  --tracking-wide: 0.025em;
+  --tracking-wider: 0.05em;
+  --tracking-widest: 0.1em;
+  --tracking-mega: 0.4em;
+
+  /* Colors */
+  --color-black: #000000;
+  --color-beige: #D6CFBF;
+  --color-grey: #9A9287;
+  --color-red: #CC342C;
+}
+
+/* ==========================================================================
+   Typography Utility Classes (Semantic Text Styles)
+   ========================================================================== */
+@layer components {
+  /* Display / Hero Text */
+  .text-display {
+    font-family: var(--font-display);
+    font-weight: var(--weight-normal);
+    line-height: var(--leading-tight);
+  }
+
+  /* Body / Content Text */
+  .text-body {
+    font-family: var(--font-body);
+    font-weight: var(--weight-normal);
+    line-height: var(--leading-normal);
+  }
+
+  /* UI Labels / Small Caps */
+  .text-label {
+    font-family: var(--font-ui);
+    font-weight: var(--weight-normal);
+    letter-spacing: var(--tracking-mega);
+    text-transform: uppercase;
+    line-height: var(--leading-normal);
+  }
+
+  /* Mono / Technical Text */
+  .text-mono {
+    font-family: var(--font-mono);
+    font-weight: var(--weight-normal);
+    line-height: var(--leading-normal);
+  }
+
+  /* Navigation Text */
+  .text-nav {
+    font-family: var(--font-ui);
+    font-weight: var(--weight-normal);
+    letter-spacing: var(--tracking-widest);
+    text-transform: uppercase;
+    font-size: var(--text-xs);
+  }
+}
+
+/* ==========================================================================
+   Base Styles
+   ========================================================================== */
 body {
-  background-color: #000000;
-  color: #D6CFBF;
+  background-color: var(--color-black);
+  color: var(--color-beige);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Custom Scrollbar */
@@ -40,5 +151,5 @@ body {
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #C83E36;
+  background: var(--color-red);
 }
