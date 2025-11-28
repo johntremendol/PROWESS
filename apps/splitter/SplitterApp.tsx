@@ -361,9 +361,13 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
                     ))}
                  </select>
                  <button 
-                   onClick={handleAddExpense}
-                   disabled={!newDesc || !newAmount || !newPayer}
-                   className="bg-prowess-red w-10 h-10 flex items-center justify-center text-black hover:bg-white transition-colors disabled:opacity-50"
+                   onClick={() => {
+                     if (!newDesc) { alert("Please enter a description"); return; }
+                     if (!newAmount) { alert("Please enter an amount"); return; }
+                     if (!newPayer) { alert("Please select who paid"); return; }
+                     handleAddExpense();
+                   }}
+                   className={`bg-prowess-red w-10 h-10 flex items-center justify-center text-black hover:bg-white transition-colors ${(!newDesc || !newAmount || !newPayer) ? 'opacity-50' : ''}`}
                  >
                    <Plus size={20} />
                  </button>
