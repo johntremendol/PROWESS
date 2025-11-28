@@ -153,3 +153,249 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-red);
 }
+
+/* ==========================================================================
+   Animation Keyframes
+   ========================================================================== */
+@keyframes expand-red {
+  from {
+    height: 0;
+    opacity: 0;
+  }
+  to {
+    height: 100%;
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-down {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes bar-grow {
+  from {
+    flex-grow: 0;
+  }
+  to {
+    flex-grow: var(--target-grow);
+  }
+}
+
+@keyframes number-pop {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ==========================================================================
+   Component Classes
+   ========================================================================== */
+
+/* Group Card */
+.card-group {
+  background-color: var(--color-black);
+  border: 1px solid rgba(154, 146, 135, 0.2);
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+.card-group:hover {
+  border-color: rgba(214, 207, 191, 0.4);
+}
+
+/* Create Button */
+.btn-create {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--color-beige);
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  transition: color 0.2s ease;
+}
+.btn-create:hover {
+  color: white;
+}
+
+/* Primary Button (Red) */
+.btn-primary {
+  background-color: var(--color-red);
+  color: black;
+  padding: 1rem 2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+.btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.btn-primary:not(:disabled):hover {
+  background-color: var(--color-beige);
+}
+
+/* Bottom Sheet Overlay */
+.sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+  z-index: 40;
+  animation: fade-in 0.2s ease-out forwards;
+}
+.sheet-overlay.closing {
+  animation: fade-out 0.2s ease-out forwards;
+}
+
+/* Bottom Sheet Content */
+.sheet-content {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: #0c0a09;
+  border-top-left-radius: 1.5rem;
+  border-top-right-radius: 1.5rem;
+  z-index: 50;
+  border-top: 1px solid rgba(154, 146, 135, 0.2);
+  max-height: 85vh;
+  overflow-y: auto;
+  animation: slide-up 0.3s ease-out forwards;
+}
+.sheet-content.closing {
+  animation: slide-down 0.3s ease-out forwards;
+}
+
+/* Sheet Handle */
+.sheet-handle {
+  width: 2.5rem;
+  height: 0.25rem;
+  background-color: rgba(154, 146, 135, 0.4);
+  border-radius: 9999px;
+  margin: 0.75rem auto 1rem;
+}
+
+/* Input Underline Style */
+.input-underline {
+  background-color: transparent;
+  border-bottom: 1px solid rgba(154, 146, 135, 0.3);
+  padding: 0.75rem 0;
+  width: 100%;
+  color: var(--color-beige);
+  transition: border-color 0.2s ease;
+}
+.input-underline::placeholder {
+  color: rgba(154, 146, 135, 0.5);
+}
+.input-underline:focus {
+  border-color: var(--color-beige);
+  outline: none;
+}
+
+/* Tab Navigation */
+.tab-nav {
+  display: flex;
+  gap: 1.5rem;
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  overflow-x: auto;
+  border-bottom: 1px solid rgba(154, 146, 135, 0.1);
+  padding-bottom: 0.75rem;
+  scrollbar-width: none;
+}
+.tab-nav::-webkit-scrollbar {
+  display: none;
+}
+.tab-nav-item {
+  color: var(--color-grey);
+  white-space: nowrap;
+  transition: color 0.2s ease;
+  cursor: pointer;
+}
+.tab-nav-item.active {
+  color: var(--color-beige);
+}
+
+/* Expense Row */
+.expense-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 0;
+  border-bottom: 1px solid rgba(154, 146, 135, 0.1);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.expense-row:last-child {
+  border-bottom: none;
+}
+.expense-row:hover {
+  background-color: rgba(154, 146, 135, 0.05);
+}
+
+/* Contribution Bar */
+.contribution-bar {
+  height: 0.25rem;
+  background-color: rgba(154, 146, 135, 0.2);
+  border-radius: 9999px;
+  overflow: hidden;
+  display: flex;
+}
+.contribution-segment {
+  height: 100%;
+  transition: all 0.7s ease-out;
+}
+
+/* Create Flow Red Panel */
+.create-panel {
+  background-color: var(--color-red);
+  overflow: hidden;
+  transition: all 0.5s ease-out;
+}
+
