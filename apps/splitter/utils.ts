@@ -1,0 +1,62 @@
+import { Group, Balance, Debt } from '../../types';
+
+export const calculateBalances = (group: Group): Balance[] => {
+  const balances: Record<string, number> = {};
+  
+  // Initialize zero balances
+  group.members.forEach(m => balances[m.id] = 0);
+
+  // Iterate expenses
+  group.expenses.forEach(expense => {
+    const paidBy = expense.paidBy;
+    const amount = expense.amount;
+    const splitCount = group.members.length;
+    const splitAmount = amount / splitCount;
+
+    // Payer gets positive balance (owed money)
+    if (balances[paidBy] !== undefined) {
+      balances[paidBy] += amount;
+    }
+
+    // Everyone (including payer) deducts their share (owes money)
+    group.members.forEach(m => {
+      balances[m.id] -= splitAmount;
+    });
+  });
+
+  return Object.keys(balances).map(id => ({
+    memberId: id,
+    balance: balances[id]
+  }));
+};
+
+// Simplified debt matching algorithm
+export const calculateDebts = (balances: Balance[]): Debt[] => {
+  const debtors = balances.filter(b => b.balance < -0.01).sort((a, b) => a.balance - b.balance); // Ascending (most negative first)
+  const creditors = balances.filter(b => b.balance > 0.01).sort((a, b) => b.balance - a.balance); // Descending (most positive first)
+
+  const debts: Debt[] = [];
+  let i = 0; // debtor index
+  let j = 0; // creditor index
+
+  while (i < debtors.length && j < creditors.length) {
+    const debtor = debtors[i];
+    const creditor = creditors[j];
+
+    const amount = Math.min(Math.abs(debtor.balance), creditor.balance);
+    
+    debts.push({
+      from: debtor.memberId,
+      to: creditor.memberId,
+      amount: amount
+    });
+
+    debtor.balance += amount;
+    creditor.balance -= amount;
+
+    if (Math.abs(debtor.balance) < 0.01) i++;
+    if (creditor.balance < 0.01) j++;
+  }
+
+  return debts;
+};
