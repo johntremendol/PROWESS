@@ -7,8 +7,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        serif: ['"Playfair Display"', 'serif'],
+        serif: ['"Instrument Serif"', 'serif'],
         sans: ['"Inter"', 'sans-serif'],
+        optician: ['"Optician Sans"', 'sans-serif'],
       },
       colors: {
         prowess: {

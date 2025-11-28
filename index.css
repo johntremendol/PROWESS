@@ -2,11 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Instrument Serif';
+  src: url('/src/assets/fonts/InstrumentSerif-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Instrument Serif';
+  src: url('/src/assets/fonts/InstrumentSerif-Italic.ttf') format('truetype');
+  font-weight: normal;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Optician Sans';
+  src: url('/src/assets/fonts/Optician-Sans.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 body {
-  background-color: #0a0a0a;
-  color: #E5E5E5;
-  /* Subtle texture overlay effect */
-  background-image: radial-gradient(circle at 50% 0%, #2a2a2a 0%, #0a0a0a 70%);
+  background-color: #000000;
+  color: #D6CFBF;
 }
 
 /* Custom Scrollbar */
