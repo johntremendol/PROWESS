@@ -36,7 +36,7 @@ const Avatar: React.FC<AvatarProps> = ({
 
   const baseClasses = `
     rounded-full flex items-center justify-center
-    font-optician uppercase tracking-wider
+    uppercase tracking-wider
     transition-colors duration-200
     ${sizeMap[size]}
   `;
@@ -49,6 +49,7 @@ const Avatar: React.FC<AvatarProps> = ({
   return (
     <div
       className={`${baseClasses} ${variantClasses} ${className}`}
+      style={{ fontFamily: '"Optician Sans", sans-serif' }}
       title={name}
     >
       {initials}

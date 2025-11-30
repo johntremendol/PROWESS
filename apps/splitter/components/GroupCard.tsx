@@ -34,7 +34,7 @@ const GroupCard: React.FC<GroupCardProps> = ({
 
   // Close context menu when clicking outside
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
+    const handleClickOutside = () => {
       if (showContextMenu) {
         setShowContextMenu(false);
       }
