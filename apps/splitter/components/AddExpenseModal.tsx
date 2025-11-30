@@ -136,8 +136,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                 <Avatar
                   name={member.name}
                   size="sm"
-                  variant={paidBy === member.id ? 'outline' : 'filled'}
-                  className={paidBy === member.id ? 'border-prowess-red text-prowess-red' : 'bg-black text-prowess-red'}
+                  variant={paidBy === member.id ? 'filled' : 'outline'}
                 />
                 <span>{member.name}</span>
               </button>

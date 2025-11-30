@@ -11,12 +11,13 @@ interface UseSwipeGestureReturn {
   currentIndex: number;
   setCurrentIndex: (index: number) => void;
   bind: ReturnType<typeof useDrag>;
-  direction: 'left' | 'right' | null;
+  offset: number; // Current drag offset in pixels for smooth following
 }
 
 /**
  * Custom hook for infinite swipe carousel functionality.
  * Uses @use-gesture/react for smooth drag detection.
+ * Returns offset for smooth drag-following animation.
  */
 export const useSwipeGesture = ({
   totalItems,
@@ -24,7 +25,7 @@ export const useSwipeGesture = ({
   onIndexChange,
 }: UseSwipeGestureOptions): UseSwipeGestureReturn => {
   const [currentIndex, setCurrentIndexState] = useState(0);
-  const [direction, setDirection] = useState<'left' | 'right' | null>(null);
+  const [offset, setOffset] = useState(0);
 
   const setCurrentIndex = useCallback((index: number) => {
     // Handle infinite loop wrapping
@@ -41,21 +42,22 @@ export const useSwipeGesture = ({
 
   const bind = useDrag(
     ({ movement: [mx], direction: [dx], active }) => {
-      if (!active) {
-        // Gesture ended
+      if (active) {
+        // While dragging, update offset for smooth following
+        setOffset(mx);
+      } else {
+        // Gesture ended - snap to index
+        setOffset(0);
+        
         if (Math.abs(mx) > threshold) {
           if (dx > 0) {
             // Swiped right -> go to previous
-            setDirection('right');
             setCurrentIndex(currentIndex - 1);
           } else {
             // Swiped left -> go to next
-            setDirection('left');
             setCurrentIndex(currentIndex + 1);
           }
         }
-        // Reset direction after a short delay
-        setTimeout(() => setDirection(null), 300);
       }
     },
     {
@@ -68,7 +70,7 @@ export const useSwipeGesture = ({
     currentIndex,
     setCurrentIndex,
     bind,
-    direction,
+    offset,
   };
 };
 

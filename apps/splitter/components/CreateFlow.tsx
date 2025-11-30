@@ -84,9 +84,17 @@ const CreateFlow: React.FC<CreateFlowProps> = ({ onCreateGroup, onCancel }) => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Header - Black section with logo */}
-      <div className="bg-black flex justify-center items-center py-6">
-        <img src={splitterLogo} alt="Splitter" className="w-10 h-10 object-contain" />
+      {/* Header - Black section with back button and logo */}
+      <div className="bg-black flex justify-center items-center py-4 relative">
+        <button
+          onClick={onCancel}
+          className="absolute left-4 text-prowess-grey hover:text-prowess-beige transition-colors text-nav"
+        >
+          ← Back
+        </button>
+        <button onClick={onCancel} className="hover:opacity-80 transition-opacity">
+          <img src={splitterLogo} alt="Splitter" className="w-10 h-10 object-contain" />
+        </button>
       </div>
 
       {/* Red Content Area */}
@@ -132,7 +140,7 @@ const CreateFlow: React.FC<CreateFlowProps> = ({ onCreateGroup, onCancel }) => {
                 key={member.id}
                 className="flex items-center gap-3 py-2"
               >
-                <Avatar name={member.name} size="sm" variant="filled" className="bg-prowess-beige text-prowess-red" />
+                <Avatar name={member.name} size="sm" variant="filled" />
                 <span className="flex-1 text-prowess-beige">{member.name}</span>
                 <button
                   onClick={() => handleRemoveMember(member.id)}

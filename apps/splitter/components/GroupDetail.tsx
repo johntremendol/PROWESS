@@ -21,6 +21,7 @@ interface GroupDetailProps {
 /**
  * Main group detail view with total expense visualization
  * and swipeable tabs for settlements, expenses, and analytics.
+ * Layout matches the mockup with stacked avatars and tree-branch visualization.
  */
 const GroupDetail: React.FC<GroupDetailProps> = ({
   group,
@@ -73,29 +74,35 @@ const GroupDetail: React.FC<GroupDetailProps> = ({
   return (
     <div className="min-h-screen bg-black flex flex-col">
       {/* Header */}
-      <Header onBack={onBack} />
+      <Header onBack={onBack} backLabel="GROUPS" />
 
-      {/* Group Info */}
-      <div className="px-4 py-2">
-        <div className="flex items-center justify-between">
+      {/* Group Info - Label + Name on left, stacked avatars on right */}
+      <div className="px-4 py-3">
+        <div className="flex items-start justify-between">
           <div>
-            <p className="text-label text-xs text-prowess-grey mb-1">Total Expense</p>
-            <h1 className="text-display text-xl text-prowess-beige">{group.name}</h1>
+            <p className="text-label text-xs text-prowess-grey mb-1">TOTAL EXPENSE</p>
+            <h1 className="text-display text-xl text-prowess-beige italic">{group.name}</h1>
           </div>
-          <div className="flex -space-x-2">
-            {group.members.slice(0, 5).map((member) => (
-              <Avatar key={member.id} name={member.name} size="md" variant="outline" />
-            ))}
-            {group.members.length > 5 && (
-              <div className="w-8 h-8 rounded-full bg-prowess-grey/20 flex items-center justify-center text-xs text-prowess-grey">
-                +{group.members.length - 5}
+          {/* Stacked avatars - using Avatar component for consistency */}
+          <div className="flex items-center">
+            {group.members.slice(0, 3).map((member, idx) => (
+              <div 
+                key={member.id}
+                className={idx > 0 ? '-ml-3' : ''}
+                style={{ zIndex: 10 - idx }}
+              >
+                <Avatar 
+                  name={member.name} 
+                  size="sm" 
+                  variant="outline"
+                />
               </div>
-            )}
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Total Expense Visualization */}
+      {/* Total Expense Visualization - Tree branch style */}
       <TotalExpense
         members={group.members}
         expenses={group.expenses}
@@ -103,7 +110,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({
       />
 
       {/* Swipeable Tabs */}
-      <SwipeCarousel tabs={tabs} className="flex-1 border-t border-prowess-grey/10 pt-4" />
+      <SwipeCarousel tabs={tabs} className="flex-1 pt-4" />
 
       {/* Expense Detail Sheet */}
       <ExpenseSheet

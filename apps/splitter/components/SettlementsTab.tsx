@@ -1,5 +1,5 @@
 import { Member, Debt } from '../../../types';
-import Avatar from './Avatar';
+import SettlementRow from './SettlementRow';
 
 interface SettlementsTabProps {
   debts: Debt[];
@@ -9,14 +9,10 @@ interface SettlementsTabProps {
 
 /**
  * Settlements tab showing who owes whom.
- * Displays avatar pairs with amounts.
+ * Uses SettlementRow component for consistent styling.
  */
 const SettlementsTab: React.FC<SettlementsTabProps> = ({ debts, members, currency }) => {
   const getMember = (id: string) => members.find(m => m.id === id);
-
-  const formatMoney = (amount: number) => {
-    return `${currency}${amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-  };
 
   if (debts.length === 0) {
     return (
@@ -28,7 +24,7 @@ const SettlementsTab: React.FC<SettlementsTabProps> = ({ debts, members, currenc
   }
 
   return (
-    <div className="px-4 space-y-4">
+    <div className="flex flex-col">
       {debts.map((debt, idx) => {
         const from = getMember(debt.from);
         const to = getMember(debt.to);
@@ -36,24 +32,13 @@ const SettlementsTab: React.FC<SettlementsTabProps> = ({ debts, members, currenc
         if (!from || !to) return null;
 
         return (
-          <div
+          <SettlementRow
             key={idx}
-            className="flex items-center justify-between py-4 border-b border-prowess-grey/10 last:border-0"
-          >
-            {/* From -> To */}
-            <div className="flex items-center gap-3">
-              <Avatar name={from.name} size="md" variant="outline" />
-              <div className="flex flex-col">
-                <span className="text-prowess-beige text-sm">{from.name}</span>
-                <span className="text-prowess-grey text-xs">pays {to.name}</span>
-              </div>
-            </div>
-
-            {/* Amount */}
-            <div className="text-display text-xl text-prowess-red">
-              {formatMoney(debt.amount)}
-            </div>
-          </div>
+            from={from}
+            to={to}
+            amount={debt.amount}
+            currency={currency}
+          />
         );
       })}
     </div>

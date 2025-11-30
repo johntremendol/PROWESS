@@ -86,45 +86,55 @@
 
 /* ==========================================================================
    Typography Utility Classes (Semantic Text Styles)
+   
+   FONT POLICY:
+   - Use these semantic classes for consistent typography
+   - text-display: Instrument Serif (headlines, large text, group names)
+   - text-body: Instrument Serif (paragraphs, content)
+   - text-label: Optician Sans (labels, small caps, metadata)
+   - text-nav: Optician Sans (navigation, buttons, back links)
+   - text-mono: Optician Sans (numbers, technical data)
+   
+   DO NOT use font-optician or font-serif directly - use these semantic classes
    ========================================================================== */
 @layer components {
-  /* Display / Hero Text */
+  /* Display / Hero Text - Instrument Serif */
   .text-display {
-    font-family: var(--font-display);
-    font-weight: var(--weight-normal);
-    line-height: var(--leading-tight);
+    font-family: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+    font-weight: 400;
+    line-height: 1.25;
   }
 
-  /* Body / Content Text */
+  /* Body / Content Text - Instrument Serif */
   .text-body {
-    font-family: var(--font-body);
-    font-weight: var(--weight-normal);
-    line-height: var(--leading-normal);
+    font-family: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+    font-weight: 400;
+    line-height: 1.5;
   }
 
-  /* UI Labels / Small Caps */
+  /* UI Labels / Small Caps - Optician Sans */
   .text-label {
-    font-family: var(--font-ui);
-    font-weight: var(--weight-normal);
-    letter-spacing: var(--tracking-mega);
+    font-family: 'Optician Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 400;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
-    line-height: var(--leading-normal);
+    line-height: 1.5;
   }
 
-  /* Mono / Technical Text */
+  /* Mono / Technical Text - Optician Sans */
   .text-mono {
-    font-family: var(--font-mono);
-    font-weight: var(--weight-normal);
-    line-height: var(--leading-normal);
+    font-family: 'Optician Sans', 'SF Mono', Monaco, monospace;
+    font-weight: 400;
+    line-height: 1.5;
   }
 
-  /* Navigation Text */
+  /* Navigation Text - Optician Sans */
   .text-nav {
-    font-family: var(--font-ui);
-    font-weight: var(--weight-normal);
-    letter-spacing: var(--tracking-widest);
+    font-family: 'Optician Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 400;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    font-size: var(--text-xs);
+    font-size: 0.75rem;
   }
 }
 
@@ -231,6 +241,11 @@ body {
   }
 }
 
+/* Framer-like Ease */
+:root {
+  --ease-framer: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* ==========================================================================
    Component Classes
    ========================================================================== */
@@ -240,7 +255,7 @@ body {
   background-color: var(--color-black);
   border: 1px solid rgba(154, 146, 135, 0.2);
   padding: 1.5rem;
-  transition: all 0.3s ease;
+  transition: all 0.3s var(--ease-framer);
 }
 .card-group:hover {
   border-color: rgba(214, 207, 191, 0.4);
@@ -254,7 +269,7 @@ body {
   color: var(--color-beige);
   padding-top: 1rem;
   padding-bottom: 1rem;
-  transition: color 0.2s ease;
+  transition: color 0.2s var(--ease-framer);
 }
 .btn-create:hover {
   color: white;
@@ -268,7 +283,7 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   font-size: 0.875rem;
-  transition: all 0.2s ease;
+  transition: all 0.2s var(--ease-framer);
 }
 .btn-primary:disabled {
   opacity: 0.4;
@@ -285,10 +300,10 @@ body {
   background-color: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(4px);
   z-index: 40;
-  animation: fade-in 0.2s ease-out forwards;
+  animation: fade-in 0.2s var(--ease-framer) forwards;
 }
 .sheet-overlay.closing {
-  animation: fade-out 0.2s ease-out forwards;
+  animation: fade-out 0.2s var(--ease-framer) forwards;
 }
 
 /* Bottom Sheet Content */
@@ -304,10 +319,10 @@ body {
   border-top: 1px solid rgba(154, 146, 135, 0.2);
   max-height: 85vh;
   overflow-y: auto;
-  animation: slide-up 0.3s ease-out forwards;
+  animation: slide-up 0.3s var(--ease-framer) forwards;
 }
 .sheet-content.closing {
-  animation: slide-down 0.3s ease-out forwards;
+  animation: slide-down 0.3s var(--ease-framer) forwards;
 }
 
 /* Sheet Handle */
@@ -326,7 +341,7 @@ body {
   padding: 0.75rem 0;
   width: 100%;
   color: var(--color-beige);
-  transition: border-color 0.2s ease;
+  transition: border-color 0.2s var(--ease-framer);
 }
 .input-underline::placeholder {
   color: rgba(154, 146, 135, 0.5);
@@ -345,8 +360,7 @@ body {
   letter-spacing: 0.4em;
   text-transform: uppercase;
   overflow-x: auto;
-  border-bottom: 1px solid rgba(154, 146, 135, 0.1);
-  padding-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
   scrollbar-width: none;
 }
 .tab-nav::-webkit-scrollbar {
@@ -355,7 +369,7 @@ body {
 .tab-nav-item {
   color: var(--color-grey);
   white-space: nowrap;
-  transition: color 0.2s ease;
+  transition: color 0.2s var(--ease-framer);
   cursor: pointer;
 }
 .tab-nav-item.active {
@@ -370,7 +384,7 @@ body {
   padding: 1rem 0;
   border-bottom: 1px solid rgba(154, 146, 135, 0.1);
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s var(--ease-framer);
 }
 .expense-row:last-child {
   border-bottom: none;
@@ -389,13 +403,13 @@ body {
 }
 .contribution-segment {
   height: 100%;
-  transition: all 0.7s ease-out;
+  transition: all 0.7s var(--ease-framer);
 }
 
 /* Create Flow Red Panel */
 .create-panel {
   background-color: var(--color-red);
   overflow: hidden;
-  transition: all 0.5s ease-out;
+  transition: all 0.5s var(--ease-framer);
 }
 

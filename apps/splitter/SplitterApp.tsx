@@ -8,7 +8,6 @@ import Header from './components/Header';
 import GroupCard from './components/GroupCard';
 import CreateFlow from './components/CreateFlow';
 import GroupDetail from './components/GroupDetail';
-import { Plus } from '../../components/ui/Icons';
 
 interface SplitterAppProps {
   onBack: () => void;
@@ -207,15 +206,15 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
           className="w-full bg-prowess-red px-5 py-6 text-left hover:brightness-110 transition-all"
         >
           <h2 className="text-display text-2xl text-prowess-beige italic mb-3">create group</h2>
-          <div className="w-9 h-9 rounded-full border border-prowess-beige/50 flex items-center justify-center">
-            <Plus size={18} className="text-prowess-beige" />
+          <div className="w-9 h-9 rounded-full border border-prowess-beige/50 flex items-center justify-center text-prowess-beige text-lg">
+            +
           </div>
         </button>
 
         {/* Loading State */}
         {loading && (
           <div className="text-center py-12">
-            <div className="font-optician text-prowess-grey text-sm uppercase tracking-wider animate-pulse">Syncing...</div>
+            <div className="text-label text-prowess-grey text-sm animate-pulse">Syncing...</div>
           </div>
         )}
 
@@ -237,8 +236,8 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
         {/* Empty State */}
         {!loading && groups.length === 0 && (
           <div className="text-center py-16 text-prowess-grey">
-            <p className="font-optician text-xs uppercase tracking-wider">No Groups Yet</p>
-            <p className="font-optician text-sm mt-2">Tap "create group" to get started</p>
+            <p className="text-label text-xs">No Groups Yet</p>
+            <p className="text-label text-sm mt-2" style={{ textTransform: 'none' }}>Tap "create group" to get started</p>
           </div>
         )}
       </div>
