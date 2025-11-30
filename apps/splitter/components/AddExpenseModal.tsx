@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Member, Expense } from '../../../types';
 import Avatar from './Avatar';
+import splitterLogo from '../../../src/assets/splitterlogo.png';
 
 interface AddExpenseModalProps {
   members: Member[];
@@ -68,15 +69,15 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       <div className="flex justify-between items-center p-4">
         <button
           onClick={handleClose}
-          className="text-black/60 hover:text-black text-sm transition-colors"
+          className="text-prowess-beige/60 hover:text-prowess-beige text-sm transition-colors"
         >
           Cancel
         </button>
-        <div className="text-display text-black text-2xl italic">$</div>
+        <img src={splitterLogo} alt="Splitter" className="w-10 h-10 object-contain" />
         <button
           onClick={handleSubmit}
           disabled={!canSubmit}
-          className="text-black text-sm disabled:opacity-40 transition-opacity"
+          className="text-prowess-beige text-sm disabled:opacity-40 transition-opacity"
         >
           Add
         </button>

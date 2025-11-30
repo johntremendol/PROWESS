@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Plus, Trash2 } from '../../../components/ui/Icons';
 import Avatar from './Avatar';
+import splitterLogo from '../../../src/assets/splitterlogo.png';
 
 type CreateStep = 'idle' | 'name' | 'members';
 
@@ -82,92 +83,77 @@ const CreateFlow: React.FC<CreateFlowProps> = ({ onCreateGroup, onCancel }) => {
   const canCreate = groupName.trim() && members.length >= 2;
 
   return (
-    <div className="create-panel min-h-screen flex flex-col">
-      {/* Header */}
-      <div className="flex justify-between items-center p-4">
-        <button
-          onClick={onCancel}
-          className="text-prowess-beige/60 hover:text-prowess-beige text-sm transition-colors"
-        >
-          Cancel
-        </button>
-        <div className="text-display text-prowess-beige text-2xl italic">$</div>
-        <div className="w-12" /> {/* Spacer for centering */}
+    <div className="min-h-screen flex flex-col">
+      {/* Header - Black section with logo */}
+      <div className="bg-black flex justify-center items-center py-6">
+        <img src={splitterLogo} alt="Splitter" className="w-10 h-10 object-contain" />
       </div>
 
-      {/* Content */}
-      <div className="flex-1 flex flex-col p-6">
-        {/* Group Name Section */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-8 h-8 rounded-full border border-prowess-beige/30 flex items-center justify-center">
-              <Plus size={16} className="text-prowess-beige/60" />
-            </div>
-            <input
-              ref={nameInputRef}
-              type="text"
-              value={groupName}
-              onChange={(e) => setGroupName(e.target.value)}
-              onKeyDown={handleNameKeyDown}
-              placeholder="group name"
-              className="flex-1 bg-transparent border-b border-prowess-beige/20 py-2 text-2xl text-prowess-beige placeholder-prowess-beige/40 focus:border-prowess-beige focus:outline-none transition-colors text-display"
-              disabled={step === 'members'}
-            />
-          </div>
+      {/* Red Content Area */}
+      <div className="flex-1 bg-prowess-red flex flex-col px-5 py-6">
+        {/* Group Name Input */}
+        <div className="mb-2">
+          <input
+            ref={nameInputRef}
+            type="text"
+            value={groupName}
+            onChange={(e) => setGroupName(e.target.value)}
+            onKeyDown={handleNameKeyDown}
+            placeholder="group name"
+            className="w-full bg-transparent border-b border-prowess-beige/30 py-2 text-2xl text-prowess-beige placeholder-prowess-beige/50 focus:border-prowess-beige focus:outline-none transition-colors text-display italic"
+            disabled={step === 'members'}
+          />
         </div>
 
-        {/* Members Section - Only visible in step 2 */}
-        {step === 'members' && (
-          <div className="flex-1 flex flex-col animate-fade-in">
-            {/* Member Input */}
-            <div className="flex items-center gap-3 mb-6">
-              <button
-                onClick={handleAddMember}
-                className="w-8 h-8 rounded-full border border-prowess-beige/30 flex items-center justify-center hover:bg-prowess-beige/10 transition-colors"
+        {/* Member Input - Always visible */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleAddMember}
+            className="w-9 h-9 rounded-full border border-prowess-beige/50 flex items-center justify-center hover:bg-prowess-beige/10 transition-colors flex-shrink-0"
+          >
+            <Plus size={18} className="text-prowess-beige" />
+          </button>
+          <input
+            ref={memberInputRef}
+            type="text"
+            value={memberName}
+            onChange={(e) => setMemberName(e.target.value)}
+            onKeyDown={handleMemberKeyDown}
+            placeholder="member name"
+            className="flex-1 bg-transparent border-b border-prowess-beige/30 py-2 text-lg text-prowess-beige placeholder-prowess-beige/50 focus:border-prowess-beige focus:outline-none transition-colors"
+          />
+        </div>
+
+        {/* Members List */}
+        {members.length > 0 && (
+          <div className="mt-6 space-y-3 overflow-y-auto flex-1">
+            {members.map((member) => (
+              <div
+                key={member.id}
+                className="flex items-center gap-3 py-2"
               >
-                <Plus size={16} className="text-prowess-beige/60" />
-              </button>
-              <input
-                ref={memberInputRef}
-                type="text"
-                value={memberName}
-                onChange={(e) => setMemberName(e.target.value)}
-                onKeyDown={handleMemberKeyDown}
-                placeholder="member name"
-                className="flex-1 bg-transparent border-b border-prowess-beige/20 py-2 text-lg text-prowess-beige placeholder-prowess-beige/40 focus:border-prowess-beige focus:outline-none transition-colors"
-              />
-            </div>
-
-            {/* Members List */}
-            <div className="flex-1 space-y-3 overflow-y-auto">
-              {members.map((member) => (
-                <div
-                  key={member.id}
-                  className="flex items-center gap-3 py-2"
-                >
-                  <Avatar name={member.name} size="sm" variant="filled" className="bg-prowess-beige text-prowess-red" />
-                  <span className="flex-1 text-prowess-beige">{member.name}</span>
-                  <button
-                    onClick={() => handleRemoveMember(member.id)}
-                    className="text-prowess-beige/40 hover:text-prowess-beige transition-colors"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            {/* Create Button */}
-            {canCreate && (
-              <div className="mt-auto pt-6">
+                <Avatar name={member.name} size="sm" variant="filled" className="bg-prowess-beige text-prowess-red" />
+                <span className="flex-1 text-prowess-beige">{member.name}</span>
                 <button
-                  onClick={handleCreate}
-                  className="w-full py-4 border border-prowess-beige text-prowess-beige uppercase tracking-widest text-sm hover:bg-prowess-beige hover:text-prowess-red transition-colors"
+                  onClick={() => handleRemoveMember(member.id)}
+                  className="text-prowess-beige/40 hover:text-prowess-beige transition-colors"
                 >
-                  Create Group
+                  <Trash2 size={16} />
                 </button>
               </div>
-            )}
+            ))}
+          </div>
+        )}
+
+        {/* Create Button */}
+        {canCreate && (
+          <div className="mt-auto pt-6">
+            <button
+              onClick={handleCreate}
+              className="w-full py-4 border border-prowess-beige text-prowess-beige uppercase tracking-widest text-sm hover:bg-prowess-beige hover:text-prowess-red transition-colors"
+            >
+              Create Group
+            </button>
           </div>
         )}
       </div>
