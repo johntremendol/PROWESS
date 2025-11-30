@@ -8,9 +8,9 @@ interface AvatarProps {
 }
 
 const sizeMap = {
-  sm: 'w-6 h-6 text-[10px]',
-  md: 'w-8 h-8 text-xs',
-  lg: 'w-12 h-12 text-sm',
+  sm: 'w-9 h-9 text-xs',
+  md: 'w-10 h-10 text-sm',
+  lg: 'w-14 h-14 text-base',
 };
 
 /**
@@ -36,7 +36,7 @@ const Avatar: React.FC<AvatarProps> = ({
 
   const baseClasses = `
     rounded-full flex items-center justify-center
-    font-ui uppercase tracking-wide
+    font-optician uppercase tracking-wider
     transition-colors duration-200
     ${sizeMap[size]}
   `;

@@ -147,6 +147,27 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
     }
   };
 
+  const handleDeleteGroup = async (groupId: string) => {
+    try {
+      // Delete expenses first (foreign key constraint)
+      await supabase.from('expenses').delete().eq('group_id', groupId);
+      
+      // Delete members
+      await supabase.from('members').delete().eq('group_id', groupId);
+      
+      // Delete the group
+      const { error } = await supabase.from('groups').delete().eq('id', groupId);
+      
+      if (error) throw error;
+
+      // Update local state
+      setGroups(groups.filter(g => g.id !== groupId));
+    } catch (err) {
+      console.error("Error deleting group:", err);
+      alert("Error deleting group. Check console for details.");
+    }
+  };
+
   // --- Views ---
 
   // CREATE VIEW
@@ -194,7 +215,7 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
         {/* Loading State */}
         {loading && (
           <div className="text-center py-12">
-            <div className="text-prowess-grey text-sm animate-pulse">Syncing...</div>
+            <div className="font-optician text-prowess-grey text-sm uppercase tracking-wider animate-pulse">Syncing...</div>
           </div>
         )}
 
@@ -209,14 +230,15 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
               setActiveGroupId(group.id);
               setView('DETAILS');
             }}
+            onDelete={() => handleDeleteGroup(group.id)}
           />
         ))}
 
         {/* Empty State */}
         {!loading && groups.length === 0 && (
           <div className="text-center py-16 text-prowess-grey">
-            <p className="text-label text-xs">No Groups Yet</p>
-            <p className="text-sm mt-2">Tap "create group" to get started</p>
+            <p className="font-optician text-xs uppercase tracking-wider">No Groups Yet</p>
+            <p className="font-optician text-sm mt-2">Tap "create group" to get started</p>
           </div>
         )}
       </div>
