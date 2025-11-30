@@ -178,24 +178,16 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
       {/* Header */}
       <Header onBack={onBack} />
 
-      {/* Title */}
-      <div className="px-6 py-4">
-        <h1 className="text-display text-3xl text-prowess-red italic">Groups</h1>
-        <p className="text-label text-xs text-prowess-grey mt-1">Select or Create</p>
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 px-6 pb-6 space-y-4">
-        {/* Create New Button */}
+      {/* Content - Full Width, No Padding */}
+      <div className="flex-1 flex flex-col">
+        {/* Create Group Button - Full Width Red */}
         <button
           onClick={() => setView('CREATE')}
-          className="btn-create w-full py-6 border border-dashed border-prowess-grey/30 hover:border-prowess-red transition-colors group"
+          className="w-full bg-prowess-red px-5 py-6 text-left hover:brightness-110 transition-all"
         >
-          <div className="w-10 h-10 rounded-full border border-prowess-red flex items-center justify-center group-hover:bg-prowess-red transition-colors">
-            <Plus size={20} className="text-prowess-red group-hover:text-black transition-colors" />
-          </div>
-          <div className="flex-1 text-left">
-            <span className="text-prowess-beige text-lg text-display">create new</span>
+          <h2 className="text-display text-2xl text-prowess-beige italic mb-3">create group</h2>
+          <div className="w-9 h-9 rounded-full border border-prowess-beige/50 flex items-center justify-center">
+            <Plus size={18} className="text-prowess-beige" />
           </div>
         </button>
 
@@ -206,7 +198,7 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
           </div>
         )}
 
-        {/* Groups List */}
+        {/* Groups List - Full Width */}
         {!loading && groups.map(group => (
           <GroupCard
             key={group.id}
@@ -224,7 +216,7 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
         {!loading && groups.length === 0 && (
           <div className="text-center py-16 text-prowess-grey">
             <p className="text-label text-xs">No Groups Yet</p>
-            <p className="text-sm mt-2">Tap "create new" to get started</p>
+            <p className="text-sm mt-2">Tap "create group" to get started</p>
           </div>
         )}
       </div>

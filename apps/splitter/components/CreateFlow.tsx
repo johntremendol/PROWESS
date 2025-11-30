@@ -87,11 +87,11 @@ const CreateFlow: React.FC<CreateFlowProps> = ({ onCreateGroup, onCancel }) => {
       <div className="flex justify-between items-center p-4">
         <button
           onClick={onCancel}
-          className="text-black/60 hover:text-black text-sm transition-colors"
+          className="text-prowess-beige/60 hover:text-prowess-beige text-sm transition-colors"
         >
           Cancel
         </button>
-        <div className="text-display text-black text-2xl italic">$</div>
+        <div className="text-display text-prowess-beige text-2xl italic">$</div>
         <div className="w-12" /> {/* Spacer for centering */}
       </div>
 
@@ -100,8 +100,8 @@ const CreateFlow: React.FC<CreateFlowProps> = ({ onCreateGroup, onCancel }) => {
         {/* Group Name Section */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-8 h-8 rounded-full border border-black/30 flex items-center justify-center">
-              <Plus size={16} className="text-black/60" />
+            <div className="w-8 h-8 rounded-full border border-prowess-beige/30 flex items-center justify-center">
+              <Plus size={16} className="text-prowess-beige/60" />
             </div>
             <input
               ref={nameInputRef}
@@ -110,7 +110,7 @@ const CreateFlow: React.FC<CreateFlowProps> = ({ onCreateGroup, onCancel }) => {
               onChange={(e) => setGroupName(e.target.value)}
               onKeyDown={handleNameKeyDown}
               placeholder="group name"
-              className="flex-1 bg-transparent border-b border-black/20 py-2 text-2xl text-black placeholder-black/40 focus:border-black focus:outline-none transition-colors text-display"
+              className="flex-1 bg-transparent border-b border-prowess-beige/20 py-2 text-2xl text-prowess-beige placeholder-prowess-beige/40 focus:border-prowess-beige focus:outline-none transition-colors text-display"
               disabled={step === 'members'}
             />
           </div>
@@ -123,9 +123,9 @@ const CreateFlow: React.FC<CreateFlowProps> = ({ onCreateGroup, onCancel }) => {
             <div className="flex items-center gap-3 mb-6">
               <button
                 onClick={handleAddMember}
-                className="w-8 h-8 rounded-full border border-black/30 flex items-center justify-center hover:bg-black/10 transition-colors"
+                className="w-8 h-8 rounded-full border border-prowess-beige/30 flex items-center justify-center hover:bg-prowess-beige/10 transition-colors"
               >
-                <Plus size={16} className="text-black/60" />
+                <Plus size={16} className="text-prowess-beige/60" />
               </button>
               <input
                 ref={memberInputRef}
@@ -134,7 +134,7 @@ const CreateFlow: React.FC<CreateFlowProps> = ({ onCreateGroup, onCancel }) => {
                 onChange={(e) => setMemberName(e.target.value)}
                 onKeyDown={handleMemberKeyDown}
                 placeholder="member name"
-                className="flex-1 bg-transparent border-b border-black/20 py-2 text-lg text-black placeholder-black/40 focus:border-black focus:outline-none transition-colors"
+                className="flex-1 bg-transparent border-b border-prowess-beige/20 py-2 text-lg text-prowess-beige placeholder-prowess-beige/40 focus:border-prowess-beige focus:outline-none transition-colors"
               />
             </div>
 
@@ -145,11 +145,11 @@ const CreateFlow: React.FC<CreateFlowProps> = ({ onCreateGroup, onCancel }) => {
                   key={member.id}
                   className="flex items-center gap-3 py-2"
                 >
-                  <Avatar name={member.name} size="sm" variant="filled" className="bg-black text-prowess-red" />
-                  <span className="flex-1 text-black">{member.name}</span>
+                  <Avatar name={member.name} size="sm" variant="filled" className="bg-prowess-beige text-prowess-red" />
+                  <span className="flex-1 text-prowess-beige">{member.name}</span>
                   <button
                     onClick={() => handleRemoveMember(member.id)}
-                    className="text-black/40 hover:text-black transition-colors"
+                    className="text-prowess-beige/40 hover:text-prowess-beige transition-colors"
                   >
                     <Trash2 size={16} />
                   </button>
@@ -162,7 +162,7 @@ const CreateFlow: React.FC<CreateFlowProps> = ({ onCreateGroup, onCancel }) => {
               <div className="mt-auto pt-6">
                 <button
                   onClick={handleCreate}
-                  className="w-full py-4 border border-black text-black uppercase tracking-widest text-sm hover:bg-black hover:text-prowess-red transition-colors"
+                  className="w-full py-4 border border-prowess-beige text-prowess-beige uppercase tracking-widest text-sm hover:bg-prowess-beige hover:text-prowess-red transition-colors"
                 >
                   Create Group
                 </button>
