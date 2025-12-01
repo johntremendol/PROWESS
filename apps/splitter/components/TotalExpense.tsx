@@ -71,7 +71,7 @@ const TotalExpense: React.FC<TotalExpenseProps> = ({ members, expenses, currency
       {/* Total Amount - Fills the same width as ContributionBar */}
       <div 
         ref={containerRef}
-        className="px-4 mb-6 overflow-hidden"
+        className="px-4 mb-2 overflow-hidden"
       >
         {/* Hidden measurement span */}
         <span 

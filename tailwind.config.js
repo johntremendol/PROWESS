@@ -40,15 +40,17 @@ export default {
       },
       colors: {
         prowess: {
-          black: 'var(--color-black)',
-          grey: 'var(--color-grey)',
-          red: 'var(--color-red)',
-          beige: 'var(--color-beige)',
+          // Direct hex values - more reliable than CSS variables
+          black: '#000000',
+          grey: '#9A9287',
+          red: '#CC342C',
+          beige: '#D6CFBF',
+          'dark-warm': '#1F1A17',
           // Semantic aliases
-          bg: 'var(--color-black)',
-          text: 'var(--color-beige)',
-          muted: 'var(--color-grey)',
-          accent: 'var(--color-red)',
+          bg: '#000000',
+          text: '#D6CFBF',
+          muted: '#9A9287',
+          accent: '#CC342C',
         }
       },
       animation: {

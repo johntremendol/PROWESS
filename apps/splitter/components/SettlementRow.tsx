@@ -24,7 +24,10 @@ const SettlementRow: React.FC<SettlementRowProps> = ({
   currency,
 }) => {
   return (
-    <div className="flex items-center py-6 px-4 bg-[#0a0a0a] border-b border-[#1a1a1a]">
+    <div 
+      className="flex items-center py-6 px-4 border-b border-black"
+      style={{ backgroundColor: '#1F1A17' }}
+    >
       {/* From Avatar */}
       <Avatar 
         name={from.name} 

@@ -73,44 +73,47 @@ const GroupDetail: React.FC<GroupDetailProps> = ({
 
   return (
     <div className="min-h-screen bg-black flex flex-col">
-      {/* Header */}
+      {/* Fixed Header */}
       <Header onBack={onBack} backLabel="GROUPS" />
 
-      {/* Group Info - Label + Name on left, stacked avatars on right */}
-      <div className="px-4 py-3">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-label text-xs text-prowess-grey mb-1">TOTAL EXPENSE</p>
-            <h1 className="text-display text-xl text-prowess-beige italic">{group.name}</h1>
-          </div>
-          {/* Stacked avatars - using Avatar component for consistency */}
-          <div className="flex items-center">
-            {group.members.slice(0, 3).map((member, idx) => (
-              <div 
-                key={member.id}
-                className={idx > 0 ? '-ml-3' : ''}
-                style={{ zIndex: 10 - idx }}
-              >
-                <Avatar 
-                  name={member.name} 
-                  size="sm" 
-                  variant="outline"
-                />
-              </div>
-            ))}
+      {/* Scrollable Content Area - Everything scrolls together */}
+      <div className="flex-1 overflow-y-auto">
+        {/* Group Info - Label + Name on left, stacked avatars on right */}
+        <div className="px-4 py-3">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-label text-xs text-prowess-grey mb-1">TOTAL EXPENSE</p>
+              <h1 className="text-display text-xl text-prowess-beige italic">{group.name}</h1>
+            </div>
+            {/* Stacked avatars - using Avatar component for consistency */}
+            <div className="flex items-center">
+              {group.members.slice(0, 3).map((member, idx) => (
+                <div 
+                  key={member.id}
+                  className={idx > 0 ? '-ml-3' : ''}
+                  style={{ zIndex: 10 - idx }}
+                >
+                  <Avatar 
+                    name={member.name} 
+                    size="sm" 
+                    variant="outline"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
+
+        {/* Total Expense Visualization - Tree branch style */}
+        <TotalExpense
+          members={group.members}
+          expenses={group.expenses}
+          currency={currency}
+        />
+
+        {/* Swipeable Tabs - Now part of scroll container */}
+        <SwipeCarousel tabs={tabs} className="pt-4" />
       </div>
-
-      {/* Total Expense Visualization - Tree branch style */}
-      <TotalExpense
-        members={group.members}
-        expenses={group.expenses}
-        currency={currency}
-      />
-
-      {/* Swipeable Tabs */}
-      <SwipeCarousel tabs={tabs} className="flex-1 pt-4" />
 
       {/* Expense Detail Sheet */}
       <ExpenseSheet

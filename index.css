@@ -82,6 +82,7 @@
   --color-beige: #D6CFBF;
   --color-grey: #9A9287;
   --color-red: #CC342C;
+  --color-dark-warm: #1F1A17;
 }
 
 /* ==========================================================================
@@ -132,7 +133,7 @@
   .text-nav {
     font-family: 'Optician Sans', -apple-system, BlinkMacSystemFont, sans-serif;
     font-weight: 400;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
     font-size: 0.75rem;
   }
@@ -354,10 +355,10 @@ body {
 /* Tab Navigation */
 .tab-nav {
   display: flex;
-  gap: 1.5rem;
-  font-family: var(--font-ui);
+  gap: 2rem;
+  font-family: 'Optician Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 0.75rem;
-  letter-spacing: 0.4em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   overflow-x: auto;
   padding-bottom: 0.5rem;
