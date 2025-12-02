@@ -2,20 +2,29 @@ import { Group, Balance, Debt } from '../../types';
 
 export const calculateBalances = (group: Group): Balance[] => {
   const balances: Record<string, number> = {};
-  
+
   // Initialize zero balances
   group.members.forEach(m => balances[m.id] = 0);
 
   // Iterate expenses
   group.expenses.forEach(expense => {
-    const paidBy = expense.paidBy;
     const amount = expense.amount;
     const splitCount = group.members.length;
     const splitAmount = amount / splitCount;
 
-    // Payer gets positive balance (owed money)
-    if (balances[paidBy] !== undefined) {
-      balances[paidBy] += amount;
+    // Handle both string (single payer) and PayerContribution[] (multi-payer)
+    if (typeof expense.paidBy === 'string') {
+      // Payer gets positive balance (owed money)
+      if (balances[expense.paidBy] !== undefined) {
+        balances[expense.paidBy] += amount;
+      }
+    } else if (Array.isArray(expense.paidBy)) {
+      // Multi-payer: each payer gets credit for their contribution
+      expense.paidBy.forEach(contrib => {
+        if (balances[contrib.memberId] !== undefined) {
+          balances[contrib.memberId] += contrib.amount;
+        }
+      });
     }
 
     // Everyone (including payer) deducts their share (owes money)
@@ -44,7 +53,7 @@ export const calculateDebts = (balances: Balance[]): Debt[] => {
     const creditor = creditors[j];
 
     const amount = Math.min(Math.abs(debtor.balance), creditor.balance);
-    
+
     debts.push({
       from: debtor.memberId,
       to: creditor.memberId,

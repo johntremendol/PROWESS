@@ -20,11 +20,16 @@ export const analyzeExpenses = async (group: Group, debts: Debt[]) => {
   try {
     const memberMap = group.members.reduce((acc, m) => ({ ...acc, [m.id]: m.name }), {} as Record<string, string>);
 
-    const expenseSummary = group.expenses.map(e => 
-      `${e.date}: ${memberMap[e.paidBy]} paid ${group.currency}${e.amount} for ${e.description} (${e.category})`
-    ).join('\n');
+    const expenseSummary = group.expenses.map(e => {
+      // Get payer name - handle both string and array formats
+      const payerName = typeof e.paidBy === 'string'
+        ? memberMap[e.paidBy]
+        : e.paidBy.map(p => memberMap[p.memberId]).join(' & ');
 
-    const debtSummary = debts.map(d => 
+      return `${e.date}: ${payerName} paid ${group.currency}${e.amount} for ${e.description} (${e.category})`;
+    }).join('\n');
+
+    const debtSummary = debts.map(d =>
       `${memberMap[d.from]} owes ${memberMap[d.to]} ${group.currency}${d.amount.toFixed(2)}`
     ).join('\n');
 
@@ -66,7 +71,7 @@ export const analyzeExpenses = async (group: Group, debts: Debt[]) => {
 export const suggestSplitCategory = async (description: string): Promise<string> => {
   if (!ai) return 'General';
   try {
-     const response = await ai.models.generateContent({
+    const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: `Categorize this expense description into one word (e.g., Food, Transport, Utilities, Entertainment): "${description}"`,
     });

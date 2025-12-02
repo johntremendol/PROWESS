@@ -42,7 +42,7 @@ const ContributionBar: React.FC<ContributionBarProps> = ({
 
   const contributions = useMemo((): ContributionData[] => {
     const memberContributions: Record<string, number> = {};
-    
+
     // Initialize all members with 0
     members.forEach(m => {
       memberContributions[m.id] = 0;
@@ -50,8 +50,17 @@ const ContributionBar: React.FC<ContributionBarProps> = ({
 
     // Sum up contributions by payer
     expenses.forEach(exp => {
-      if (memberContributions[exp.paidBy] !== undefined) {
-        memberContributions[exp.paidBy] += exp.amount;
+      // Handle both string (single payer) and PayerContribution[] (multi-payer)
+      if (typeof exp.paidBy === 'string') {
+        if (memberContributions[exp.paidBy] !== undefined) {
+          memberContributions[exp.paidBy] += exp.amount;
+        }
+      } else if (Array.isArray(exp.paidBy)) {
+        exp.paidBy.forEach(contrib => {
+          if (memberContributions[contrib.memberId] !== undefined) {
+            memberContributions[contrib.memberId] += contrib.amount;
+          }
+        });
       }
     });
 
@@ -78,16 +87,16 @@ const ContributionBar: React.FC<ContributionBarProps> = ({
     // Apply minimum width tolerance
     const needsMinWidth = rawData.filter(c => c.percentage < MIN_WIDTH_PERCENT);
     const normalSegments = rawData.filter(c => c.percentage >= MIN_WIDTH_PERCENT);
-    
+
     if (needsMinWidth.length > 0) {
       const extraNeeded = needsMinWidth.reduce((sum, c) => sum + (MIN_WIDTH_PERCENT - c.percentage), 0);
       const normalTotal = normalSegments.reduce((sum, c) => sum + c.percentage, 0);
       const scaleFactor = normalTotal > 0 ? (normalTotal - extraNeeded) / normalTotal : 1;
-      
+
       return rawData.map(c => ({
         ...c,
-        percentage: c.percentage < MIN_WIDTH_PERCENT 
-          ? MIN_WIDTH_PERCENT 
+        percentage: c.percentage < MIN_WIDTH_PERCENT
+          ? MIN_WIDTH_PERCENT
           : c.percentage * scaleFactor,
       }));
     }
@@ -110,7 +119,7 @@ const ContributionBar: React.FC<ContributionBarProps> = ({
           <div
             key={contrib.memberId}
             className="flex flex-col items-center"
-            style={{ 
+            style={{
               // Subtract gap from percentage calculation
               width: `calc(${contrib.percentage}% - ${(GAP_PX * (contributions.length - 1)) / contributions.length}px)`,
               flexShrink: 0,
@@ -118,15 +127,15 @@ const ContributionBar: React.FC<ContributionBarProps> = ({
           >
             {/* Top Rectangle: U-shape (left, bottom, right borders) */}
             <div className="w-full h-4 border-l border-r border-b border-[#CC342C]" />
-            
+
             {/* Bottom Rectangle: Vertical tick (1px wide line) */}
             <div className="w-px h-5 bg-[#CC342C]" />
-            
+
             {/* Avatar - Using the Avatar component for consistency */}
             <div className="mt-3">
-              <Avatar 
-                name={contrib.member.name} 
-                size="md" 
+              <Avatar
+                name={contrib.member.name}
+                size="md"
                 variant="outline"
               />
             </div>

@@ -38,15 +38,22 @@ const ExpensesTab: React.FC<ExpensesTabProps> = ({
 
       {/* Expenses List */}
       <div className="flex flex-col">
-        {expenses.map((expense) => (
-          <ExpenseItem
-            key={expense.id}
-            expense={expense}
-            payer={getMember(expense.paidBy)}
-            currency={currency}
-            onClick={() => onExpenseClick(expense)}
-          />
-        ))}
+        {expenses.map((expense) => {
+          // Get payer ID - handle both string and array formats
+          const payerId = typeof expense.paidBy === 'string'
+            ? expense.paidBy
+            : expense.paidBy[0]?.memberId;
+
+          return (
+            <ExpenseItem
+              key={expense.id}
+              expense={expense}
+              payer={getMember(payerId)}
+              currency={currency}
+              onClick={() => onExpenseClick(expense)}
+            />
+          );
+        })}
       </div>
 
       {/* Empty State */}
