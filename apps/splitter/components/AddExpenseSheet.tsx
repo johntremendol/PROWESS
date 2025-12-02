@@ -3,7 +3,7 @@ import { Member, Expense } from '../../../types';
 import RotatingDial from './RotatingDial';
 import CategoryChipSelector from './CategoryChipSelector';
 import PayerSelector from './PayerSelector';
-import LiveSettlementPreview from './LiveSettlementPreview';
+
 
 interface AddExpenseSheetProps {
   members: Member[];
@@ -54,8 +54,7 @@ const AddExpenseSheet: React.FC<AddExpenseSheetProps> = ({
       const splitAmount = totalAmount / selectedPayers.length;
       const newContributions: Record<string, number> = {};
       selectedPayers.forEach(payerId => {
-        // Keep existing contribution if it exists, otherwise use split amount
-        newContributions[payerId] = payerContributions[payerId] ?? splitAmount;
+        newContributions[payerId] = splitAmount;
       });
       setPayerContributions(newContributions);
     }
@@ -108,137 +107,109 @@ const AddExpenseSheet: React.FC<AddExpenseSheetProps> = ({
     <>
       {/* Red Backdrop */}
       <div
-        className={`fixed inset-0 z-40 transition-opacity duration-300 ${
-          isClosing ? 'opacity-0' : 'opacity-90'
-        }`}
+        className={`fixed inset-0 z-40 transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-90'
+          }`}
         style={{ backgroundColor: '#CC342C' }}
         onClick={handleClose}
       />
 
       {/* Sheet Content */}
       <div
-        className={`fixed inset-x-0 bottom-0 z-50 bg-black transition-transform duration-400 ${
-          isClosing ? 'translate-y-full' : 'translate-y-0'
-        }`}
+        className={`fixed inset-x-0 bottom-0 z-50 bg-black flex flex-col transition-transform duration-400 ${isClosing ? 'translate-y-full' : 'translate-y-0'
+          }`}
         style={{
-          maxHeight: '95vh',
-          borderTopLeftRadius: '0',
-          borderTopRightRadius: '0',
+          height: '90vh', // Fixed height for the sheet
+          borderTopLeftRadius: '20px',
+          borderTopRightRadius: '20px',
           transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >
-        {/* Scalloped Top Edge */}
-        <div
-          className="w-full h-10"
-          style={{
-            background: `
-              radial-gradient(circle at 0% 0%, transparent 20px, #CC342C 20px),
-              radial-gradient(circle at 10% 0%, transparent 20px, #CC342C 20px),
-              radial-gradient(circle at 20% 0%, transparent 20px, #CC342C 20px),
-              radial-gradient(circle at 30% 0%, transparent 20px, #CC342C 20px),
-              radial-gradient(circle at 40% 0%, transparent 20px, #CC342C 20px),
-              radial-gradient(circle at 50% 0%, transparent 20px, #CC342C 20px),
-              radial-gradient(circle at 60% 0%, transparent 20px, #CC342C 20px),
-              radial-gradient(circle at 70% 0%, transparent 20px, #CC342C 20px),
-              radial-gradient(circle at 80% 0%, transparent 20px, #CC342C 20px),
-              radial-gradient(circle at 90% 0%, transparent 20px, #CC342C 20px),
-              radial-gradient(circle at 100% 0%, transparent 20px, #CC342C 20px),
-              #CC342C
-            `,
-            backgroundSize: '40px 40px',
-            backgroundPosition: '0 0',
-          }}
-        />
-
-        {/* Scrollable Content */}
-        <div className="overflow-y-auto" style={{ maxHeight: 'calc(95vh - 40px)' }}>
-          <div className="px-6 py-6 space-y-8">
-            {/* Title Section */}
-            <div>
-              <p className="text-label text-xs text-prowess-grey mb-3">TITLE</p>
-              <div className="flex items-center border-b border-prowess-grey/20 pb-2">
-                <div className="flex-1" />
-                {isTitleEditing ? (
-                  <input
-                    ref={titleInputRef}
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    onBlur={() => setIsTitleEditing(false)}
-                    placeholder="renly's diner"
-                    className="text-display text-2xl text-prowess-beige bg-transparent outline-none text-right w-full"
-                  />
-                ) : (
-                  <div
-                    onClick={handleTitleClick}
-                    className="text-display text-2xl text-prowess-beige cursor-pointer text-right w-full"
-                  >
-                    {title || 'renly\'s diner'}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Category Section */}
-            <div>
-              <p className="text-label text-xs text-prowess-grey mb-3">CATEGORY</p>
-              <div className="border-b border-prowess-grey/20 pb-3 mb-3">
-                <div className="text-display text-2xl text-prowess-beige text-right">
-                  {category}
+        {/* Scrollable Content (Form Fields) */}
+        <div className="flex-1 overflow-y-auto px-6 pt-8 pb-4 space-y-8">
+          {/* Title Section */}
+          <div className="border-b border-prowess-grey/20 pb-2">
+            <div className="flex items-end justify-between gap-4">
+              <p className="text-label text-xs text-prowess-grey mb-1 flex-none">TITLE</p>
+              {isTitleEditing ? (
+                <input
+                  ref={titleInputRef}
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  onBlur={() => setIsTitleEditing(false)}
+                  placeholder="renly's diner"
+                  className="text-display text-2xl text-prowess-beige bg-transparent outline-none text-right flex-1 min-w-0 placeholder:opacity-50"
+                />
+              ) : (
+                <div
+                  onClick={handleTitleClick}
+                  className="text-display text-2xl text-prowess-beige cursor-pointer text-right flex-1 min-w-0 truncate"
+                  style={{ opacity: title ? 1 : 0.5 }}
+                >
+                  {title || 'renly\'s diner'}
                 </div>
-              </div>
-              <CategoryChipSelector
-                selectedCategory={category}
-                customCategories={customCategories}
-                onCategorySelect={setCategory}
-                onCustomCategoryAdd={(newCat) => {
-                  setCustomCategories([newCat, ...customCategories]);
-                  setCategory(newCat);
-                }}
-              />
+              )}
             </div>
+          </div>
 
-            {/* Paid By Section */}
-            <div>
-              <p className="text-label text-xs text-prowess-grey mb-4">PAID BY</p>
-              <PayerSelector
-                members={members}
-                selectedPayers={selectedPayers}
-                contributions={payerContributions}
-                totalAmount={totalAmount}
-                onPayersChange={handlePayersChange}
-                onContributionChange={handleContributionChange}
-                currency={currency}
-              />
-            </div>
+          {/* Category Section */}
+          <div>
+            <p className="text-label text-xs text-prowess-grey mb-3">CATEGORY</p>
+            <CategoryChipSelector
+              selectedCategory={category}
+              customCategories={customCategories}
+              onCategorySelect={setCategory}
+              onCustomCategoryAdd={(newCat: string) => {
+                setCustomCategories([newCat, ...customCategories]);
+                setCategory(newCat);
+              }}
+            />
+          </div>
 
-            {/* Amount Dial */}
-            <div className="py-8">
-              <RotatingDial
-                value={totalAmount}
-                onChange={setTotalAmount}
-                currency={currency}
-                min={0}
-                max={1000000}
-              />
-            </div>
+          {/* Paid By Section */}
+          <div>
+            <p className="text-label text-xs text-prowess-grey mb-4">PAID BY</p>
+            <PayerSelector
+              members={members}
+              selectedPayers={selectedPayers}
+              contributions={payerContributions}
+              totalAmount={totalAmount}
+              onPayersChange={handlePayersChange}
+              onContributionChange={handleContributionChange}
+              currency={currency}
+            />
+          </div>
+        </div>
 
-            {/* Live Settlement Preview */}
-            {selectedPayers.length > 0 && totalAmount > 0 && (
-              <LiveSettlementPreview
-                members={members}
-                selectedPayers={selectedPayers}
-                contributions={payerContributions}
-                totalAmount={totalAmount}
-                currency={currency}
-              />
-            )}
+        {/* Fixed Bottom Section: Gradient + Dial + Confirm Button */}
+        <div className="flex-none relative w-full flex flex-col items-center justify-end pb-6 bg-black">
+          {/* Gradient fade - fades from content into dial area */}
+          <div
+            className="absolute top-0 left-0 right-0 pointer-events-none z-10"
+            style={{
+              height: '200px',
+              background: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 100%)',
+              marginTop: '-200px'
+            }}
+          />
 
-            {/* Confirm Button */}
+          {/* Dial */}
+          <div className="mb-4 w-full flex justify-center overflow-visible relative" style={{ marginTop: '-40px' }}>
+            <RotatingDial
+              value={totalAmount}
+              onChange={setTotalAmount}
+              currency={currency}
+              min={0}
+              max={1000000}
+            />
+          </div>
+
+          {/* Confirm Button */}
+          <div className="w-full px-6 z-20">
             <button
               onClick={handleConfirm}
               disabled={!canConfirm}
-              className="w-full py-4 bg-white text-black text-label text-sm tracking-widest rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-95 transition-all"
+              className="w-full py-4 bg-white text-black text-label text-sm tracking-widest font-bold uppercase disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-90 transition-all"
             >
               CONFIRM
             </button>
@@ -250,4 +221,5 @@ const AddExpenseSheet: React.FC<AddExpenseSheetProps> = ({
 };
 
 export default AddExpenseSheet;
+
 

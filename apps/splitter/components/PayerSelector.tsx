@@ -65,39 +65,11 @@ const PayerSelector: React.FC<PayerSelectorProps> = ({
   };
 
   const formatAmount = (amount: number): string => {
-    return `${currency}${Math.round(amount).toLocaleString()}`;
-  };
-
-  // Show settlement-style row for multi-payer splits
-  const renderMultiPayerSplit = () => {
-    if (selectedPayers.length < 2) return null;
-
-    const payer1 = members.find(m => m.id === selectedPayers[0]);
-    const payer2 = members.find(m => m.id === selectedPayers[1]);
-    
-    if (!payer1 || !payer2) return null;
-
-    const contribution1 = contributions[selectedPayers[0]] || 0;
-    const contribution2 = contributions[selectedPayers[1]] || 0;
-
-    return (
-      <div className="mt-4 flex items-center py-4 px-4 bg-prowess-dark-warm border border-black rounded-lg">
-        <Avatar name={payer1.name} size="md" variant="outline" />
-        <div className="flex-1 h-px bg-prowess-red mx-3" />
-        <div className="text-display text-xl text-prowess-beige whitespace-nowrap">
-          {formatAmount(contribution1 + contribution2)}
-        </div>
-        <div className="flex-1 h-px bg-prowess-red mx-3" />
-        <div className="flex -space-x-2">
-          <Avatar name={payer1.name} size="md" variant="outline" />
-          <Avatar name={payer2.name} size="md" variant="outline" />
-        </div>
-      </div>
-    );
+    return `${currency} ${Math.round(amount).toLocaleString()}`;
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2 w-full">
       {/* Member Selection */}
       {members.map((member) => {
         const isSelected = selectedPayers.includes(member.id);
@@ -107,31 +79,24 @@ const PayerSelector: React.FC<PayerSelectorProps> = ({
         return (
           <div
             key={member.id}
-            className={`
-              flex items-center justify-between py-3 px-4 rounded-lg 
-              transition-all cursor-pointer border
-              ${
-                isSelected
-                  ? 'bg-prowess-dark-warm border-prowess-beige/30'
-                  : 'bg-transparent border-prowess-grey/10 hover:border-prowess-grey/30'
-              }
-            `}
+            className="flex items-center justify-between py-4 px-4 transition-all cursor-pointer"
+            style={{ backgroundColor: isSelected ? '#1F1A17' : '#000000' }}
             onClick={() => !isEditing && togglePayer(member.id)}
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <Avatar
                 name={member.name}
                 size="md"
                 variant={isSelected ? 'filled' : 'outline'}
               />
-              <span className={`text-prowess-beige ${!isSelected && 'opacity-60'}`}>
+              <span className="text-display text-xl text-prowess-beige">
                 {member.name}
               </span>
             </div>
 
-            {isSelected && totalAmount > 0 && (
-              <div onClick={(e) => e.stopPropagation()}>
-                {isEditing ? (
+            <div onClick={(e) => e.stopPropagation()}>
+              {isSelected && totalAmount > 0 ? (
+                isEditing ? (
                   <input
                     ref={inputRef}
                     type="text"
@@ -144,27 +109,30 @@ const PayerSelector: React.FC<PayerSelectorProps> = ({
                     }}
                     onBlur={handleContributionBlur}
                     onKeyDown={handleContributionKeyDown}
-                    className="w-24 text-right text-prowess-beige bg-transparent border-b border-prowess-red outline-none"
+                    className="w-32 text-right text-display text-xl text-prowess-beige bg-transparent border-b border-prowess-red outline-none"
+                    autoFocus
                   />
                 ) : (
                   <div
                     onClick={() => handleContributionClick(member.id, contribution)}
-                    className="text-prowess-beige cursor-pointer hover:text-prowess-red transition-colors"
+                    className="text-display text-xl text-prowess-beige cursor-pointer hover:text-prowess-red transition-colors"
                   >
                     {formatAmount(contribution)}
                   </div>
-                )}
-              </div>
-            )}
+                )
+              ) : (
+                <div className="text-display text-xl text-prowess-beige opacity-0">
+                  {formatAmount(0)}
+                </div>
+              )}
+            </div>
           </div>
         );
       })}
-
-      {/* Multi-Payer Split Visualization */}
-      {renderMultiPayerSplit()}
     </div>
   );
 };
 
 export default PayerSelector;
+
 

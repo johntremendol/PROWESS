@@ -1,5 +1,3 @@
-import { useState, useRef } from 'react';
-
 interface CategoryChipSelectorProps {
   selectedCategory: string;
   customCategories: string[];
@@ -24,26 +22,7 @@ const CategoryChipSelector: React.FC<CategoryChipSelectorProps> = ({
   onCategorySelect,
   onCustomCategoryAdd,
 }) => {
-  const [customInput, setCustomInput] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
-
   const allCategories = [...customCategories, ...DEFAULT_CATEGORIES];
-
-  const handleCustomInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && customInput.trim()) {
-      const newCategory = customInput.trim().toLowerCase();
-      
-      // Check if category already exists
-      if (!allCategories.includes(newCategory)) {
-        onCustomCategoryAdd(newCategory);
-      } else {
-        onCategorySelect(newCategory);
-      }
-      
-      setCustomInput('');
-      inputRef.current?.blur();
-    }
-  };
 
   return (
     <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
@@ -52,36 +31,36 @@ const CategoryChipSelector: React.FC<CategoryChipSelectorProps> = ({
           key={cat}
           onClick={() => onCategorySelect(cat)}
           className={`
-            px-4 py-2 rounded-full whitespace-nowrap text-sm transition-all flex-shrink-0
-            ${
-              selectedCategory === cat
-                ? 'bg-prowess-beige text-black'
-                : 'bg-stone-800 text-prowess-beige hover:bg-stone-700'
+            px-4 py-2 whitespace-nowrap text-sm transition-all flex-shrink-0
+            ${selectedCategory === cat
+              ? 'bg-prowess-beige text-black'
+              : 'bg-transparent text-prowess-grey border border-prowess-grey/30'
             }
           `}
         >
           {cat}
         </button>
       ))}
-      
-      {/* Custom Category Input */}
-      <input
-        ref={inputRef}
-        type="text"
-        value={customInput}
-        onChange={(e) => setCustomInput(e.target.value)}
-        onKeyDown={handleCustomInputKeyDown}
-        placeholder="custom..."
-        className="
-          px-4 py-2 rounded-full bg-stone-800/50 text-prowess-beige 
-          placeholder-prowess-grey/50 text-sm outline-none 
-          border border-stone-700 focus:border-prowess-beige 
-          transition-colors flex-shrink-0 min-w-32
-        "
-      />
+
+      {/* Add Custom Category Button */}
+      <button
+        onClick={() => {
+          const newCategory = prompt('Enter custom category:');
+          if (newCategory && newCategory.trim()) {
+            const trimmed = newCategory.trim().toLowerCase();
+            if (!allCategories.includes(trimmed)) {
+              onCustomCategoryAdd(trimmed);
+            } else {
+              onCategorySelect(trimmed);
+            }
+          }
+        }}
+        className="px-4 py-2 bg-transparent text-prowess-grey border border-prowess-grey/30 text-sm flex-shrink-0 transition-all hover:border-prowess-grey/50"
+      >
+        +
+      </button>
     </div>
   );
 };
 
 export default CategoryChipSelector;
-

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useDrag } from '@use-gesture/react';
+import ringCircles from '../../../src/assets/ringcirlces.svg';
 
 interface RotatingDialProps {
   value: number;
@@ -16,7 +17,7 @@ interface RotatingDialProps {
  * - Drag around edges to rotate
  * - Velocity-based increments (slow: 1, medium: 10, fast: 100)
  * - Manual input via clicking the amount
- * - ringcircles.svg as rotating background
+ * - ringcirlces.svg as rotating background
  */
 const RotatingDial: React.FC<RotatingDialProps> = ({
   value,
@@ -28,7 +29,7 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
   const [rotation, setRotation] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value.toString());
-  
+
   const lastAngle = useRef(0);
   const lastTime = useRef(Date.now());
   const containerRef = useRef<HTMLDivElement>(null);
@@ -41,7 +42,7 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
   }, [value, isEditing]);
 
   const bind = useDrag(
-    ({ movement: [mx, my], velocity: [vx, vy], active, first }) => {
+    ({ movement: [mx, my], active, first }) => {
       if (!containerRef.current) return;
 
       const rect = containerRef.current.getBoundingClientRect();
@@ -50,7 +51,7 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
 
       // Calculate angle from center
       const angle = Math.atan2(my - centerY, mx - centerX);
-      
+
       if (first) {
         lastAngle.current = angle;
         lastTime.current = Date.now();
@@ -78,10 +79,10 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
           increment = 10; // Medium rotation
         }
 
-        // Update value based on rotation direction
-        const direction = normalizedDelta > 0 ? 1 : -1;
+        // Update value based on rotation direction - FLIPPED: right = increase
+        const direction = normalizedDelta > 0 ? -1 : 1;
         const newValue = Math.max(min, Math.min(max, value + increment * direction));
-        
+
         if (newValue !== value) {
           onChange(newValue);
         }
@@ -133,55 +134,58 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
     return Math.round(amount).toLocaleString();
   };
 
+  // Calculate responsive underline width based on amount string
+  const amountString = `${currency}${formatAmount(value)}`;
+  const underlineWidth = Math.max(80, amountString.length * 35); // ~35px per character, min 80px
+
   return (
-    <div className="flex flex-col items-center">
-      {/* Rotating Dial Container */}
+    <div className="flex flex-col items-center w-full overflow-hidden">
+      {/* Rotating Dial Container - Scaled down to show only top half */}
       <div
         ref={containerRef}
         {...bind()}
-        className="relative w-80 h-80 flex items-center justify-center cursor-grab active:cursor-grabbing"
-        style={{ touchAction: 'none', willChange: 'transform' }}
+        className="relative flex items-center justify-center cursor-grab active:cursor-grabbing"
+        style={{
+          width: '400px',
+          height: '400px',
+          marginBottom: '-200px', // Pull it down so only top half is visible
+          touchAction: 'none',
+          willChange: 'transform',
+          backgroundColor: '#1F1A17',
+          borderRadius: '50%',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+        }}
       >
         {/* Ring Circles SVG Background */}
         <div
-          className="absolute inset-0 transition-transform duration-200 ease-out"
+          className="absolute inset-0 transition-transform duration-200 ease-out flex items-center justify-center"
           style={{
             transform: `rotate(${rotation}deg)`,
             transitionProperty: 'transform',
+            padding: '10px', // 10px padding from outer edge
           }}
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="100%"
-            height="100%"
-            viewBox="0 0 416.501 416.812"
-            className="opacity-40"
-          >
-            <use href="/assets/ringcircles.svg#root" />
-            {/* Fallback: inline the ring pattern */}
-            <g transform="translate(0 -0.001)">
-              <path d="M550.972,271.224v-.754h-4.523v.754Z" transform="translate(-134.471 -66.557)" fill="#676767"/>
-              <path d="M550.972,278.224v-.754h-4.523v.754Z" transform="translate(-134.471 -68.279)" fill="#676767"/>
-              <path d="M550.972,285.224v-.754h-4.523v.754Z" transform="translate(-134.471 -70.002)" fill="#676767"/>
-              {/* Additional paths from ringcircles.svg would go here - truncated for brevity */}
-            </g>
-          </svg>
+          <img
+            src={ringCircles}
+            alt="Dial"
+            className="w-full h-full object-contain opacity-40 select-none pointer-events-none"
+          />
         </div>
 
-        {/* Center Content */}
-        <div className="relative z-10 flex flex-col items-center">
-          <p className="text-label text-xs text-prowess-grey mb-4 tracking-widest">AMOUNT</p>
-          
+        {/* Center Content - Positioned at the top of the circle (which is the visible part) */}
+        <div className="relative z-10 flex flex-col items-center mb-32">
+          <p className="text-label text-xs text-prowess-grey mb-4 tracking-widest uppercase">AMOUNT</p>
+
           {/* Amount Display/Input */}
           <div className="flex items-center gap-4 mb-2">
             <button
               onClick={handleDecrement}
-              className="text-prowess-beige/60 hover:text-prowess-beige text-3xl transition-colors"
+              className="text-prowess-beige/60 hover:text-prowess-beige text-3xl transition-colors p-2"
             >
               −
             </button>
-            
-            <div className="relative">
+
+            <div className="relative flex flex-col items-center">
               {isEditing ? (
                 <input
                   ref={inputRef}
@@ -194,25 +198,28 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
                       handleAmountBlur();
                     }
                   }}
-                  className="text-display text-5xl text-prowess-beige bg-transparent outline-none text-center w-48"
+                  className="text-display text-6xl text-prowess-beige bg-transparent outline-none text-center font-normal"
                   style={{ caretColor: '#D6CFBF' }}
                 />
               ) : (
                 <div
                   onClick={handleAmountClick}
-                  className="text-display text-5xl text-prowess-beige cursor-pointer text-center min-w-48"
+                  className="text-display text-6xl text-prowess-beige cursor-pointer text-center font-normal"
                 >
                   {currency}{formatAmount(value)}
                 </div>
               )}
-              
-              {/* Red Underline */}
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-prowess-red mt-2" />
+
+              {/* Responsive Red Underline */}
+              <div
+                className="h-0.5 bg-prowess-red mt-2"
+                style={{ width: `${underlineWidth}px` }}
+              />
             </div>
-            
+
             <button
               onClick={handleIncrement}
-              className="text-prowess-beige/60 hover:text-prowess-beige text-3xl transition-colors"
+              className="text-prowess-beige/60 hover:text-prowess-beige text-3xl transition-colors p-2"
             >
               +
             </button>
@@ -224,4 +231,5 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
 };
 
 export default RotatingDial;
+
 
