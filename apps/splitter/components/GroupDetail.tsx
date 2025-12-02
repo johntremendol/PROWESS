@@ -8,7 +8,7 @@ import SettlementsTab from './SettlementsTab';
 import ExpensesTab from './ExpensesTab';
 import AnalyticsTab from './AnalyticsTab';
 import ExpenseSheet from './ExpenseSheet';
-import AddExpenseModal from './AddExpenseModal';
+import AddExpenseSheet from './AddExpenseSheet';
 
 interface GroupDetailProps {
   group: Group;
@@ -123,9 +123,9 @@ const GroupDetail: React.FC<GroupDetailProps> = ({
         onClose={() => setSelectedExpense(null)}
       />
 
-      {/* Add Expense Modal */}
+      {/* Add Expense Sheet */}
       {showAddExpense && (
-        <AddExpenseModal
+        <AddExpenseSheet
           members={group.members}
           currency={currency}
           onAdd={(expense) => {

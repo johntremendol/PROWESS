@@ -10,11 +10,16 @@ export interface Member {
   avatar?: string;
 }
 
+export interface PayerContribution {
+  memberId: string;
+  amount: number;
+}
+
 export interface Expense {
   id: string;
   description: string;
   amount: number;
-  paidBy: string; // Member ID
+  paidBy: string | PayerContribution[]; // Member ID or array for multi-payer support
   date: string;
   category: string;
 }

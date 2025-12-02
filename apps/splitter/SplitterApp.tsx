@@ -201,7 +201,7 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
       {/* Content - Full Width, No Padding */}
       <div className="flex-1 flex flex-col">
         {/* Create Group Button - Full Width Red */}
-        <button
+        <button 
           onClick={() => setView('CREATE')}
           className="w-full bg-prowess-red px-5 py-6 text-left hover:brightness-110 transition-all"
         >
@@ -209,7 +209,7 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
           <div className="w-9 h-9 rounded-full border border-prowess-beige/50 flex items-center justify-center text-prowess-beige text-lg">
             +
           </div>
-        </button>
+                </button>
 
         {/* Loading State */}
         {loading && (
@@ -240,7 +240,7 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
             <p className="text-label text-sm mt-2" style={{ textTransform: 'none' }}>Tap "create group" to get started</p>
           </div>
         )}
-      </div>
+        </div>
     </div>
   );
 };

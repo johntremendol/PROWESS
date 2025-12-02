@@ -29,8 +29,8 @@ function App() {
         {/* Buttons Grid */}
         <div className="flex gap-6 w-full justify-center">
             {/* Splitter Button */}
-            <button 
-              onClick={() => setCurrentApp(AppView.SPLITTER)}
+        <button 
+          onClick={() => setCurrentApp(AppView.SPLITTER)}
               className="w-32 h-32 rounded-[2rem] border-[2px] border-prowess-beige text-prowess-beige flex items-center justify-center hover:bg-prowess-beige hover:text-black transition-colors group overflow-hidden p-5"
             >
               <img 
@@ -38,7 +38,7 @@ function App() {
                 alt="Splitter" 
                 className="w-full h-full object-contain filter brightness-100 group-hover:brightness-0 transition-all" 
               />
-            </button>
+        </button>
 
             {/* Suggest/Add Button */}
             <button 
@@ -51,7 +51,7 @@ function App() {
         {/* Footer Text */}
         <div className="text-label text-prowess-beige text-xs">
           APPS
-        </div>
+      </div>
       </div>
     </div>
   );
