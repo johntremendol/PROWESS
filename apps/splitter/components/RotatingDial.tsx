@@ -140,20 +140,20 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
 
   return (
     <div className="flex flex-col items-center w-full overflow-hidden">
-      {/* Rotating Dial Container - Scaled down to show only top half */}
+      {/* Rotating Dial Container */}
       <div
         ref={containerRef}
         {...bind()}
-        className="relative flex items-center justify-center cursor-grab active:cursor-grabbing"
+        className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center cursor-grab active:cursor-grabbing z-10"
         style={{
-          width: '400px',
-          height: '400px',
-          marginBottom: '-200px', // Pull it down so only top half is visible
+          width: 'min(100vw, 440px)',
+          height: 'min(100vw, 440px)',
+          bottom: 'calc(min(100vw, 440px) / -2)', // Position center at bottom of container
           touchAction: 'none',
           willChange: 'transform',
-          backgroundColor: '#1F1A17',
           borderRadius: '50%',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+          backgroundColor: '#1F1A17', // Warm dark background to cover content behind
+          boxShadow: '0 -10px 40px rgba(0,0,0,0.5)', // Shadow to separate from content
         }}
       >
         {/* Ring Circles SVG Background */}
@@ -162,7 +162,7 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
           style={{
             transform: `rotate(${rotation}deg)`,
             transitionProperty: 'transform',
-            padding: '10px', // 10px padding from outer edge
+            padding: '10px', // Half of previous 20px
           }}
         >
           <img
@@ -172,12 +172,12 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
           />
         </div>
 
-        {/* Center Content - Positioned at the top of the circle (which is the visible part) */}
-        <div className="relative z-10 flex flex-col items-center mb-32">
+        {/* Center Content */}
+        <div className="relative z-10 flex flex-col items-center" style={{ marginBottom: '276px' }}>
           <p className="text-label text-xs text-prowess-grey mb-4 tracking-widest uppercase">AMOUNT</p>
 
           {/* Amount Display/Input */}
-          <div className="flex items-center gap-4 mb-2">
+          <div className="flex items-center gap-12 mb-2">
             <button
               onClick={handleDecrement}
               className="text-prowess-beige/60 hover:text-prowess-beige text-3xl transition-colors p-2"

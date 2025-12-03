@@ -43,6 +43,13 @@ const AddExpenseSheet: React.FC<AddExpenseSheetProps> = ({
   useEffect(() => {
     // Prevent body scroll when sheet is open
     document.body.style.overflow = 'hidden';
+
+    // Auto-focus title input for quick editing
+    setTimeout(() => {
+      titleInputRef.current?.focus();
+      setIsTitleEditing(true);
+    }, 400); // Delay to allow sheet animation to complete
+
     return () => {
       document.body.style.overflow = '';
     };
@@ -119,8 +126,6 @@ const AddExpenseSheet: React.FC<AddExpenseSheetProps> = ({
           }`}
         style={{
           height: '90vh', // Fixed height for the sheet
-          borderTopLeftRadius: '20px',
-          borderTopRightRadius: '20px',
           transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >
@@ -183,26 +188,26 @@ const AddExpenseSheet: React.FC<AddExpenseSheetProps> = ({
 
         {/* Fixed Bottom Section: Gradient + Dial + Confirm Button */}
         <div className="flex-none relative w-full flex flex-col items-center justify-end pb-6 bg-black">
-          {/* Gradient fade - fades from content into dial area */}
-          <div
-            className="absolute top-0 left-0 right-0 pointer-events-none z-10"
-            style={{
-              height: '200px',
-              background: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 100%)',
-              marginTop: '-200px'
-            }}
+
+
+          {/* Dial - Positioned absolutely at bottom */}
+          <RotatingDial
+            value={totalAmount}
+            onChange={setTotalAmount}
+            currency={currency}
+            min={0}
+            max={1000000}
           />
 
-          {/* Dial */}
-          <div className="mb-4 w-full flex justify-center overflow-visible relative" style={{ marginTop: '-40px' }}>
-            <RotatingDial
-              value={totalAmount}
-              onChange={setTotalAmount}
-              currency={currency}
-              min={0}
-              max={1000000}
-            />
-          </div>
+          {/* Gradient Overlay - Behind button, in front of wheel */}
+          <div
+            className="absolute bottom-0 left-0 right-0 pointer-events-none"
+            style={{
+              zIndex: 15,
+              height: '100px', // Covers button height + padding + ~20px extra
+              background: 'linear-gradient(to top, #000000 0%, rgba(0,0,0,0) 100%)',
+            }}
+          />
 
           {/* Confirm Button */}
           <div className="w-full px-6 z-20">

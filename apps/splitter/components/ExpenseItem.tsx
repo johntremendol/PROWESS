@@ -23,7 +23,7 @@ const ExpenseItem: React.FC<ExpenseItemProps> = ({
   onClick,
 }) => {
   const dateObj = new Date(expense.date);
-  
+
   const formatDate = (date: Date): string => {
     const now = new Date();
     const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
@@ -32,7 +32,7 @@ const ExpenseItem: React.FC<ExpenseItemProps> = ({
     if (diffDays === 1) return 'YESTERDAY';
     // Check if it's a valid date
     if (isNaN(date.getTime())) return expense.date;
-    
+
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
   };
 
@@ -46,7 +46,7 @@ const ExpenseItem: React.FC<ExpenseItemProps> = ({
   };
 
   return (
-    <div 
+    <div
       onClick={onClick}
       className="py-6 border-b border-black cursor-pointer hover:brightness-110 transition-all"
       style={{ backgroundColor: '#1F1A17' }}
@@ -65,18 +65,21 @@ const ExpenseItem: React.FC<ExpenseItemProps> = ({
       <div className="flex items-center justify-between px-4">
         <div className="flex items-center gap-4">
           {payer && (
-            <Avatar 
-              name={payer.name} 
-              size="md" 
-              variant="outline" 
+            <Avatar
+              name={payer.name}
+              size="md"
+              variant="outline"
             />
           )}
-          
+
           <div className="flex flex-col">
             <span className="text-display text-xl text-prowess-beige italic leading-tight mb-1">
               {expense.description}
             </span>
-            <span className="text-label text-xs text-prowess-grey capitalize">
+            <span
+              className="text-label text-xs text-prowess-grey capitalize font-serif"
+              style={{ fontFamily: 'Palatino, serif' }}
+            >
               {expense.category || 'General'}
             </span>
           </div>
