@@ -60,7 +60,7 @@ const CategoryChipSelector: React.FC<CategoryChipSelectorProps> = ({
 
   return (
     <div
-      className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide font-serif"
+      className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide font-serif -mx-6 px-6"
       style={{ fontFamily: 'Palatino, serif' }}
     >
       {/* New Category Chip - First Item */}
@@ -72,7 +72,7 @@ const CategoryChipSelector: React.FC<CategoryChipSelectorProps> = ({
           onChange={(e) => setNewCategoryName(e.target.value)}
           onBlur={handleCreateSubmit}
           onKeyDown={handleKeyDown}
-          className="px-4 py-2 bg-transparent text-prowess-beige border border-prowess-beige text-sm min-w-[80px] outline-none placeholder:text-prowess-grey/50 rounded"
+          className="px-4 py-2 bg-transparent text-prowess-beige border border-prowess-beige text-base min-w-[80px] outline-none placeholder:text-prowess-grey/50 rounded"
           placeholder="name..."
           style={{ fontFamily: 'Palatino, serif' }}
         />

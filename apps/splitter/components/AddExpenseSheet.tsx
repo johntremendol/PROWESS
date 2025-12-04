@@ -129,8 +129,28 @@ const AddExpenseSheet: React.FC<AddExpenseSheetProps> = ({
           transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >
+        {/* Scalloped Edge & Title Header */}
+        <div className="relative w-full">
+          {/* Scalloped Edge SVG - Positioned to overlap the top */}
+          <div className="absolute top-[-36px] left-0 w-full overflow-hidden leading-none z-50">
+            <svg
+              className="w-full h-[37px] text-black fill-current"
+              viewBox="0 0 430 37"
+              preserveAspectRatio="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M5.41797 0C6.72416 4.61649 10.9653 8 16 8C21.0347 8 25.2758 4.61649 26.582 0H44.418C45.7242 4.61649 49.9653 8 55 8C60.0347 8 64.2758 4.61649 65.582 0H83.418C84.7242 4.61649 88.9653 8 94 8C99.0347 8 103.276 4.61649 104.582 0H122.418C123.724 4.61649 127.965 8 133 8C138.035 8 142.276 4.61649 143.582 0H161.418C162.724 4.61649 166.965 8 172 8C177.035 8 181.276 4.61649 182.582 0H200.418C201.724 4.61649 205.965 8 211 8C216.035 8 220.276 4.61649 221.582 0H239.418C240.724 4.61649 244.965 8 250 8C255.035 8 259.276 4.61649 260.582 0H278.418C279.724 4.61649 283.965 8 289 8C294.035 8 298.276 4.61649 299.582 0H317.418C318.724 4.61649 322.965 8 328 8C333.035 8 337.276 4.61649 338.582 0H356.418C357.724 4.61649 361.965 8 367 8C372.035 8 376.276 4.61649 377.582 0H395.418C396.724 4.61649 400.965 8 406 8C411.035 8 415.276 4.61649 416.582 0H430V37H0V0H5.41797Z" />
+            </svg>
+          </div>
+
+          {/* Add Expense Title */}
+          <div className="px-6 pt-6 pb-2">
+            <h2 className="text-label text-xs text-prowess-beige tracking-widest uppercase">ADD EXPENSE</h2>
+          </div>
+        </div>
+
         {/* Scrollable Content (Form Fields) */}
-        <div className="flex-1 overflow-y-auto px-6 pt-8 pb-4 space-y-8">
+        <div className="flex-1 overflow-y-auto px-6 pt-2 pb-4 space-y-8">
           {/* Title Section */}
           <div className="border-b border-prowess-grey/20 pb-2">
             <div className="flex items-end justify-between gap-4">
@@ -184,6 +204,7 @@ const AddExpenseSheet: React.FC<AddExpenseSheetProps> = ({
               currency={currency}
             />
           </div>
+          <div className="h-[300px]"></div>
         </div>
 
         {/* Fixed Bottom Section: Gradient + Dial + Confirm Button */}
@@ -214,7 +235,7 @@ const AddExpenseSheet: React.FC<AddExpenseSheetProps> = ({
             <button
               onClick={handleConfirm}
               disabled={!canConfirm}
-              className="w-full py-4 bg-white text-black text-label text-sm tracking-widest font-bold uppercase disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-90 transition-all"
+              className="w-full py-4 bg-white text-black text-label text-sm tracking-widest font-bold uppercase disabled:bg-prowess-grey disabled:opacity-100 disabled:cursor-not-allowed hover:brightness-90 transition-all"
             >
               CONFIRM
             </button>

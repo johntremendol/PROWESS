@@ -77,7 +77,7 @@ const ExpenseItem: React.FC<ExpenseItemProps> = ({
               {expense.description}
             </span>
             <span
-              className="text-label text-xs text-prowess-grey capitalize font-serif"
+              className="text-label text-xs text-prowess-grey capitalize font-serif tracking-[0]"
               style={{ fontFamily: 'Palatino, serif' }}
             >
               {expense.category || 'General'}

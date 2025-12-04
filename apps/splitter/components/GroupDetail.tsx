@@ -77,7 +77,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({
       <Header onBack={onBack} backLabel="GROUPS" />
 
       {/* Scrollable Content Area - Everything scrolls together */}
-      <div className="flex-1 overflow-y-auto">
+      <div className={`flex-1 ${showAddExpense || selectedExpense ? 'overflow-hidden' : 'overflow-y-auto'}`}>
         {/* Group Info - Label + Name on left, stacked avatars on right */}
         <div className="px-4 py-3">
           <div className="flex items-start justify-between">
@@ -88,14 +88,14 @@ const GroupDetail: React.FC<GroupDetailProps> = ({
             {/* Stacked avatars - using Avatar component for consistency */}
             <div className="flex items-center">
               {group.members.slice(0, 3).map((member, idx) => (
-                <div 
+                <div
                   key={member.id}
                   className={idx > 0 ? '-ml-3' : ''}
                   style={{ zIndex: 10 - idx }}
                 >
-                  <Avatar 
-                    name={member.name} 
-                    size="sm" 
+                  <Avatar
+                    name={member.name}
+                    size="sm"
                     variant="outline"
                   />
                 </div>

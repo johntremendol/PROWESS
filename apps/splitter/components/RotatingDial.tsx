@@ -32,8 +32,12 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
 
   const lastAngle = useRef(0);
   const lastTime = useRef(Date.now());
+  const inertiaRef = useRef<{ velocity: number; direction: number } | null>(null);
+  const [inertia, setInertia] = useState<{ velocity: number; direction: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const latestValueRef = useRef(value);
+  latestValueRef.current = value;
 
   useEffect(() => {
     if (!isEditing) {
@@ -42,7 +46,7 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
   }, [value, isEditing]);
 
   const bind = useDrag(
-    ({ movement: [mx, my], active, first }) => {
+    ({ movement: [mx, my], active, first, last }) => {
       if (!containerRef.current) return;
 
       const rect = containerRef.current.getBoundingClientRect();
@@ -55,6 +59,8 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
       if (first) {
         lastAngle.current = angle;
         lastTime.current = Date.now();
+        setInertia(null); // Clear any ongoing inertia
+        inertiaRef.current = null; // Clear inertia ref
         return;
       }
 
@@ -74,7 +80,7 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
         // Determine increment based on velocity
         let increment = 1;
         if (angularVelocity > 0.02) {
-          increment = 100; // Fast rotation
+          increment = 20; // Fast rotation
         } else if (angularVelocity > 0.005) {
           increment = 10; // Medium rotation
         }
@@ -90,8 +96,13 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
         // Update rotation for visual feedback
         setRotation(prev => prev + (normalizedDelta * 180 / Math.PI));
 
+        inertiaRef.current = { velocity: angularVelocity, direction };
         lastAngle.current = angle;
         lastTime.current = now;
+      }
+
+      if (last && inertiaRef.current) {
+        setInertia(inertiaRef.current);
       }
     },
     {
@@ -99,6 +110,53 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
       pointer: { touch: true },
     }
   );
+
+  // Inertia Effect
+  useEffect(() => {
+    if (!inertia) return;
+
+    let { velocity, direction } = inertia;
+    let animationFrameId: number;
+    const decelerationRate = 0.95; // How fast the velocity decreases per frame
+    const minVelocity = 0.001; // Stop when velocity is very low
+
+    const step = () => {
+      if (velocity < minVelocity) {
+        setInertia(null); // Stop inertia
+        return;
+      }
+
+      let increment = 1;
+      if (velocity > 0.02) {
+        increment = 20;
+      } else if (velocity > 0.005) {
+        increment = 10;
+      }
+
+      // Calculate change based on current velocity and direction
+      const change = increment * direction;
+      const currentValue = latestValueRef.current;
+      const newValue = Math.max(min, Math.min(max, currentValue + change));
+
+      if (newValue !== currentValue) {
+        onChange(newValue);
+      }
+
+      // Update rotation for visual feedback during inertia
+      // Arbitrary scaling for visual effect
+      setRotation(prev => prev + (velocity * 180 / Math.PI * direction * 5));
+
+      velocity *= decelerationRate; // Decelerate
+
+      animationFrameId = requestAnimationFrame(step);
+    };
+
+    animationFrameId = requestAnimationFrame(step);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [inertia, min, max, onChange]); // Include min, max, onChange as they are stable props/functions
 
   const handleAmountClick = () => {
     setIsEditing(true);
@@ -121,14 +179,39 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
   };
 
   const handleIncrement = () => {
-    const newValue = Math.min(max, value + 100);
+    const newValue = Math.min(max, value + 1);
     onChange(newValue);
   };
 
   const handleDecrement = () => {
-    const newValue = Math.max(min, value - 100);
+    const newValue = Math.max(min, value - 1);
     onChange(newValue);
   };
+
+  // Interval ref for long press
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const startIncrement = () => {
+    handleIncrement(); // Trigger once immediately
+    intervalRef.current = setInterval(handleIncrement, 100); // Repeat every 100ms
+  };
+
+  const startDecrement = () => {
+    handleDecrement(); // Trigger once immediately
+    intervalRef.current = setInterval(handleDecrement, 100); // Repeat every 100ms
+  };
+
+  const stopInterval = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => stopInterval();
+  }, []);
 
   const formatAmount = (amount: number): string => {
     return Math.round(amount).toLocaleString();
@@ -179,8 +262,12 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
           {/* Amount Display/Input */}
           <div className="flex items-center gap-12 mb-2">
             <button
-              onClick={handleDecrement}
-              className="text-prowess-beige/60 hover:text-prowess-beige text-3xl transition-colors p-2"
+              onMouseDown={startDecrement}
+              onMouseUp={stopInterval}
+              onMouseLeave={stopInterval}
+              onTouchStart={startDecrement}
+              onTouchEnd={stopInterval}
+              className="text-prowess-beige/60 hover:text-prowess-beige text-3xl transition-colors p-2 select-none"
             >
               −
             </button>
@@ -218,8 +305,12 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
             </div>
 
             <button
-              onClick={handleIncrement}
-              className="text-prowess-beige/60 hover:text-prowess-beige text-3xl transition-colors p-2"
+              onMouseDown={startIncrement}
+              onMouseUp={stopInterval}
+              onMouseLeave={stopInterval}
+              onTouchStart={startIncrement}
+              onTouchEnd={stopInterval}
+              className="text-prowess-beige/60 hover:text-prowess-beige text-3xl transition-colors p-2 select-none"
             >
               +
             </button>

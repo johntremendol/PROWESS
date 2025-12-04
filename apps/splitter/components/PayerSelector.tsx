@@ -69,7 +69,7 @@ const PayerSelector: React.FC<PayerSelectorProps> = ({
   };
 
   return (
-    <div className="w-full -mx-6">
+    <div className="w-full">
       {/* Member Selection */}
       {members.map((member) => {
         const isSelected = selectedPayers.includes(member.id);
@@ -79,9 +79,15 @@ const PayerSelector: React.FC<PayerSelectorProps> = ({
         return (
           <div
             key={member.id}
-            className={`flex items-center justify-between py-4 px-10 transition-all cursor-pointer ${isSelected ? '' : 'border-b border-prowess-grey/20'
+            className={`flex items-center justify-between py-4 px-4 transition-all cursor-pointer ${isSelected ? '' : 'border-b border-prowess-grey/20'
               }`}
-            style={{ backgroundColor: isSelected ? '#1F1A17' : '#000000' }}
+            style={{
+              backgroundColor: isSelected ? '#1F1A17' : '#000000',
+              marginLeft: '-24px',
+              marginRight: '-24px',
+              paddingLeft: '24px',
+              paddingRight: '24px'
+            }}
             onClick={() => !isEditing && togglePayer(member.id)}
           >
             <div className="flex items-center gap-4">
