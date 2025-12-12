@@ -29,8 +29,9 @@ interface GroupDetailProps {
   onBack: () => void;
   onAddExpense: (expense: Omit<Expense, 'id'>) => void;
   onUpdateExpense?: (expense: Expense) => void;
-  onUpdateGroup?: (name: string, members: { id: string | null; name: string }[], currency: string) => void; // Added
+  onUpdateGroup?: (name: string, members: { id: string | null; name: string }[], currency: string) => void;
   onAddSettlement?: (settlement: Omit<Settlement, 'id'>) => void;
+  onDeleteExpense?: (expenseId: string) => void;
   onCustomCategoryAdd?: (category: string) => void;
 }
 
@@ -46,8 +47,9 @@ const GroupDetail: React.FC<GroupDetailProps> = ({
   onBack,
   onAddExpense,
   onUpdateExpense,
-  onUpdateGroup, // Destructure
+  onUpdateGroup,
   onAddSettlement,
+  onDeleteExpense,
   onCustomCategoryAdd,
 }) => {
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
@@ -98,6 +100,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({
           currency={currency}
           onAddExpense={() => setShowAddExpense(true)}
           onExpenseClick={(expense) => setSelectedExpense(expense)}
+          onDeleteExpense={onDeleteExpense}
         />
       ),
     },

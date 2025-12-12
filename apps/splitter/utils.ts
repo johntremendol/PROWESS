@@ -9,7 +9,15 @@ export const calculateBalances = (group: Group): Balance[] => {
   // Iterate expenses
   group.expenses.forEach(expense => {
     const amount = expense.amount;
-    const splitCount = group.members.length;
+
+    // Determine who is splitting this expense
+    const splitMembers = expense.splitBetween && expense.splitBetween.length > 0
+      ? expense.splitBetween
+      : group.members.map(m => m.id);
+
+    const splitCount = splitMembers.length;
+    if (splitCount === 0) return; // Should not happen but safety check needed
+
     const splitAmount = amount / splitCount;
 
     // Handle both string (single payer) and PayerContribution[] (multi-payer)
@@ -27,9 +35,11 @@ export const calculateBalances = (group: Group): Balance[] => {
       });
     }
 
-    // Everyone (including payer) deducts their share (owes money)
-    group.members.forEach(m => {
-      balances[m.id] -= splitAmount;
+    // Deduct share from those involved in the split
+    splitMembers.forEach(memberId => {
+      if (balances[memberId] !== undefined) {
+        balances[memberId] -= splitAmount;
+      }
     });
   });
 

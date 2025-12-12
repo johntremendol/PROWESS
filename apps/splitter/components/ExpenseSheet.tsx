@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Member, Expense } from '../../../types';
+import { Member, Expense, PayerContribution } from '../../../types';
 import RotatingDial from './RotatingDial';
 import CategoryChipSelector from './CategoryChipSelector';
 import Avatar from './Avatar';
@@ -8,9 +8,9 @@ interface ExpenseSheetProps {
   expense: Expense | null;
   members: Member[];
   currency: string;
-  customCategories?: string[]; // Added to match AddExpenseSheet
-  onUpdate?: (updatedExpense: Expense) => void; // Added for editing
-  onCustomCategoryAdd?: (category: string) => void; // Added for editing
+  customCategories?: string[];
+  onUpdate?: (updatedExpense: Expense) => void;
+  onCustomCategoryAdd?: (category: string) => void;
   onClose: () => void;
 }
 
@@ -18,7 +18,7 @@ interface ExpenseSheetProps {
  * ExpenseSheet Component (Edit Mode)
  * 
  * Bottom sheet for viewing and editing expenses.
- * Matches the visual style of AddExpenseSheet.
+ * Fully supports multi-payer and custom split logic matching AddExpenseSheet.
  */
 const ExpenseSheet: React.FC<ExpenseSheetProps> = ({
   expense,
@@ -31,7 +31,11 @@ const ExpenseSheet: React.FC<ExpenseSheetProps> = ({
 }) => {
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('food');
-  const [selectedPayer, setSelectedPayer] = useState<string | null>(null);
+
+  // Multi-payer state
+  const [payerContributions, setPayerContributions] = useState<Record<string, number>>({});
+  const [focusedPayerId, setFocusedPayerId] = useState<string | null>(null);
+
   const [splitMembers, setSplitMembers] = useState<string[]>([]);
   const [totalAmount, setTotalAmount] = useState(0);
   const [isClosing, setIsClosing] = useState(false);
@@ -44,19 +48,36 @@ const ExpenseSheet: React.FC<ExpenseSheetProps> = ({
     if (expense) {
       setTitle(expense.description);
       setCategory(expense.category || 'food');
-      // Handle legacy paidBy (string) vs multi-payer (array - not fully supported yet but just in case)
-      const payerId = typeof expense.paidBy === 'string' ? expense.paidBy : expense.paidBy[0]?.memberId;
-      setSelectedPayer(payerId);
       setTotalAmount(expense.amount);
 
-      // Default split to everyone for now, as we don't persist split details
-      // If we did, we'd load it here.
-      setSplitMembers(members.map(m => m.id));
+      // Initialize Payers
+      const initialContributions: Record<string, number> = {};
+      if (Array.isArray(expense.paidBy)) {
+        expense.paidBy.forEach(p => {
+          initialContributions[p.memberId] = p.amount;
+        });
+      } else if (typeof expense.paidBy === 'string') {
+        // Legacy single payer
+        initialContributions[expense.paidBy] = expense.amount;
+      }
+      setPayerContributions(initialContributions);
+
+      // Initialize Splits
+      if (expense.splitBetween && expense.splitBetween.length > 0) {
+        setSplitMembers(expense.splitBetween);
+      } else {
+        // Default to all members if no split data exists (backward compatibility)
+        setSplitMembers(members.map(m => m.id));
+      }
 
       // Prevent body scroll
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
+      // Reset state
+      setPayerContributions({});
+      setSplitMembers([]);
+      setTotalAmount(0);
     }
 
     return () => {
@@ -68,21 +89,36 @@ const ExpenseSheet: React.FC<ExpenseSheetProps> = ({
     setIsClosing(true);
     setTimeout(() => {
       onClose();
-      setIsClosing(false); // Reset for next open
+      setIsClosing(false);
     }, 400);
   };
 
+  const calculateTotal = (contributions: Record<string, number>) => {
+    return Object.values(contributions).reduce((sum, val) => sum + val, 0);
+  };
+
   const handleUpdate = () => {
-    if (!expense || !title.trim() || totalAmount <= 0 || !selectedPayer || splitMembers.length === 0) {
+    const payerIds = Object.keys(payerContributions);
+    if (!expense || !title.trim() || totalAmount <= 0 || payerIds.length === 0 || splitMembers.length === 0) {
       return;
     }
+
+    // Prepare paidBy payload
+    let paidByPayload: string | PayerContribution[];
+    // We can switch to always using array for consistency, or keep compatibility logic
+    // Using array is safer for 'complex scenarios'
+    paidByPayload = payerIds.map(id => ({
+      memberId: id,
+      amount: payerContributions[id]
+    }));
 
     if (onUpdate) {
       onUpdate({
         ...expense,
         description: title.trim(),
         amount: totalAmount,
-        paidBy: selectedPayer,
+        paidBy: paidByPayload,
+        splitBetween: splitMembers,
         category: category,
       });
     }
@@ -95,10 +131,61 @@ const ExpenseSheet: React.FC<ExpenseSheetProps> = ({
     setTimeout(() => titleInputRef.current?.focus(), 0);
   };
 
+  // --- Payer Logic ---
+  const togglePayer = (memberId: string) => {
+    setPayerContributions(prev => {
+      const next = { ...prev };
+      if (next[memberId] !== undefined) {
+        delete next[memberId];
+        if (focusedPayerId === memberId) setFocusedPayerId(null);
+      } else {
+        next[memberId] = 0;
+      }
+
+      // Redistribute total amount among new set of payers
+      const payerIds = Object.keys(next);
+      if (payerIds.length > 0 && totalAmount > 0) {
+        const share = totalAmount / payerIds.length;
+        payerIds.forEach(id => next[id] = share);
+      }
+      return next;
+    });
+  };
+
+  const handlePayerAmountClick = (e: React.MouseEvent, memberId: string) => {
+    e.stopPropagation();
+    if (payerContributions[memberId] === undefined) {
+      togglePayer(memberId);
+    }
+    setFocusedPayerId(prev => prev === memberId ? null : memberId);
+  };
+
+  // --- Dial Logic ---
+  const handleDialChange = (newValue: number) => {
+    if (focusedPayerId && payerContributions[focusedPayerId] !== undefined) {
+      setPayerContributions(prev => {
+        const next = { ...prev, [focusedPayerId]: newValue };
+        setTotalAmount(calculateTotal(next));
+        return next;
+      });
+    } else {
+      setTotalAmount(newValue);
+      setPayerContributions(prev => {
+        const payerIds = Object.keys(prev);
+        if (payerIds.length === 0) return prev;
+
+        const next = { ...prev };
+        const share = newValue / payerIds.length;
+        payerIds.forEach(id => next[id] = share);
+        return next;
+      });
+    }
+  };
+
   const toggleSplitMember = (memberId: string) => {
     setSplitMembers(prev => {
       if (prev.includes(memberId)) {
-        if (prev.length === 1) return prev; // Keep at least one
+        if (prev.length === 1) return prev;
         return prev.filter(id => id !== memberId);
       }
       return [...prev, memberId];
@@ -107,33 +194,31 @@ const ExpenseSheet: React.FC<ExpenseSheetProps> = ({
 
   const splitShare = splitMembers.length > 0 ? totalAmount / splitMembers.length : 0;
 
-  const formatShare = (amount: number): string => {
+  const formatMoney = (amount: number): string => {
     return `${currency} ${Math.round(amount).toLocaleString()}`;
   };
 
   if (!expense) return null;
 
-  const canUpdate = title.trim() && totalAmount > 0 && selectedPayer && splitMembers.length > 0;
+  const canUpdate = title.trim() && totalAmount > 0 && Object.keys(payerContributions).length > 0 && splitMembers.length > 0;
 
   return (
     <>
-      {/* Red Backdrop */}
       <div
         className={`fixed inset-0 z-40 transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-90'}`}
         style={{ backgroundColor: '#CC342C' }}
         onClick={handleClose}
       />
 
-      {/* Sheet Content */}
       <div
         className={`fixed inset-x-0 bottom-0 z-50 bg-black flex flex-col transition-transform duration-400 ${isClosing ? 'translate-y-full' : 'translate-y-0'}`}
         style={{
           height: '80vh',
           transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
         }}
+        onClick={() => setFocusedPayerId(null)}
       >
-        {/* Scalloped Edge & Header */}
-        <div className="relative w-full">
+        <div className="relative w-full flex-none">
           <div className="absolute top-[-36px] left-0 w-full overflow-hidden leading-none z-50">
             <svg
               className="w-full h-[37px] text-black fill-current"
@@ -150,9 +235,7 @@ const ExpenseSheet: React.FC<ExpenseSheetProps> = ({
           </div>
         </div>
 
-        {/* Scrollable Content (Form Fields) */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden px-6 pt-2 pb-4 space-y-8">
-          {/* Title Section */}
           <div className="border-b border-prowess-grey/20 pb-2">
             <div className="flex items-end justify-between gap-4">
               <p className="text-label text-xs text-prowess-grey mb-1 flex-none">TITLE</p>
@@ -163,11 +246,12 @@ const ExpenseSheet: React.FC<ExpenseSheetProps> = ({
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   onBlur={() => setIsTitleEditing(false)}
-                  className="text-display text-2xl text-prowess-beige bg-transparent outline-none text-right flex-1 min-w-0"
+                  className="text-display text-2xl text-prowess-beige bg-transparent outline-none text-right flex-1 min-w-0 placeholder:opacity-50"
+                  onClick={(e) => e.stopPropagation()}
                 />
               ) : (
                 <div
-                  onClick={handleTitleClick}
+                  onClick={(e) => { e.stopPropagation(); handleTitleClick(); }}
                   className="text-display text-2xl text-prowess-beige cursor-pointer text-right flex-1 min-w-0 truncate"
                 >
                   {title}
@@ -176,8 +260,7 @@ const ExpenseSheet: React.FC<ExpenseSheetProps> = ({
             </div>
           </div>
 
-          {/* Category Section */}
-          <div>
+          <div onClick={(e) => e.stopPropagation()}>
             <p className="text-label text-xs text-prowess-grey mb-3">CATEGORY</p>
             <CategoryChipSelector
               selectedCategory={category}
@@ -191,23 +274,38 @@ const ExpenseSheet: React.FC<ExpenseSheetProps> = ({
           </div>
 
           {/* Paid By Section */}
-          <div>
+          <div className="flex flex-col gap-0">
             <p className="text-label text-xs text-prowess-grey mb-4">PAID BY</p>
-            <div className="flex items-center gap-3">
+            <div className="-mx-6 flex flex-col" style={{ gap: 0 }}>
               {members.map((member) => {
-                const isSelected = selectedPayer === member.id;
+                const isPayer = payerContributions[member.id] !== undefined;
+                const contribution = payerContributions[member.id] || 0;
+                const isFocused = focusedPayerId === member.id;
+
                 return (
-                  <button
+                  <div
                     key={member.id}
-                    onClick={() => setSelectedPayer(member.id)}
-                    className={`rounded-full transition-all ${isSelected ? 'ring-2 ring-prowess-beige/60' : 'opacity-70 hover:opacity-100'}`}
+                    onClick={(e) => { e.stopPropagation(); togglePayer(member.id); }}
+                    className={`w-full flex items-center justify-between px-6 py-3 transition-colors m-0 cursor-pointer border-b border-prowess-grey/5 ${isPayer ? 'bg-[#1F1A17]' : 'bg-transparent'} hover:bg-[#231d19]`}
                   >
-                    <Avatar
-                      name={member.name}
-                      size="md"
-                      variant={isSelected ? 'filled' : 'outline'}
-                    />
-                  </button>
+                    <div className="flex items-center gap-3">
+                      <Avatar
+                        name={member.name}
+                        size="md"
+                        variant={isPayer ? 'filled' : 'outline'}
+                      />
+                      <span className={`text-display text-lg ${isPayer ? 'text-prowess-beige' : 'text-prowess-grey'}`}>
+                        {member.name}
+                      </span>
+                    </div>
+
+                    <div
+                      onClick={(e) => handlePayerAmountClick(e, member.id)}
+                      className={`text-display text-lg cursor-pointer px-2 py-1 rounded transition-colors ${isFocused ? 'bg-prowess-red text-white' : (isPayer ? 'text-prowess-beige' : 'text-prowess-grey/50')}`}
+                    >
+                      {formatMoney(contribution)}
+                    </div>
+                  </div>
                 );
               })}
             </div>
@@ -215,14 +313,14 @@ const ExpenseSheet: React.FC<ExpenseSheetProps> = ({
 
           {/* Split In Section */}
           <div className="flex flex-col gap-0">
-            <p className="text-label text-xs text-prowess-grey">SPLIT IN</p>
+            <p className="text-label text-xs text-prowess-grey mb-3">SPLIT IN</p>
             <div className="-mx-4 flex flex-col" style={{ gap: 0 }}>
               {members.map((member) => {
                 const isIncluded = splitMembers.includes(member.id);
                 return (
                   <button
                     key={member.id}
-                    onClick={() => toggleSplitMember(member.id)}
+                    onClick={(e) => { e.stopPropagation(); toggleSplitMember(member.id); }}
                     className={`w-full flex items-center justify-between px-6 py-3 transition-all border-0 outline-none focus:outline-none focus:ring-0 m-0 ${isIncluded ? 'bg-[#1F1A17]' : 'bg-black'} hover:bg-[#231d19]`}
                     style={{ margin: 0, border: 'none', boxShadow: 'none' }}
                   >
@@ -235,7 +333,7 @@ const ExpenseSheet: React.FC<ExpenseSheetProps> = ({
                       <span className="text-display text-lg text-prowess-beige">{member.name}</span>
                     </div>
                     <span className="text-display text-lg text-prowess-beige">
-                      {isIncluded ? formatShare(splitShare) : `${currency} 0`}
+                      {isIncluded ? formatMoney(splitShare) : `${currency} 0`}
                     </span>
                   </button>
                 );
@@ -245,11 +343,21 @@ const ExpenseSheet: React.FC<ExpenseSheetProps> = ({
           <div className="h-[300px]"></div>
         </div>
 
-        {/* Fixed Bottom Section */}
-        <div className="flex-none relative w-full flex flex-col items-center justify-end pb-6 bg-black">
+        <div
+          className="flex-none relative w-full flex flex-col items-center justify-end pb-6 bg-black"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {focusedPayerId && (
+            <div className="absolute top-0 left-0 w-full text-center pb-2">
+              <p className="text-label text-xs text-prowess-red tracking-widest uppercase animate-pulse">
+                SET AMOUNT FOR {members.find(m => m.id === focusedPayerId)?.name}
+              </p>
+            </div>
+          )}
+
           <RotatingDial
-            value={totalAmount}
-            onChange={setTotalAmount}
+            value={focusedPayerId ? (payerContributions[focusedPayerId] || 0) : totalAmount}
+            onChange={handleDialChange}
             currency={currency}
             min={0}
             max={1000000}

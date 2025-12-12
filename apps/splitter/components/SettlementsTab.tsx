@@ -53,7 +53,7 @@ const SettlementsTab: React.FC<SettlementsTabProps> = ({
 
       {debts.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12">
-          <p className="text-label text-lg text-prowess-grey tracking-widest">all settled</p>
+          <p className="text-label text-sm text-prowess-grey/50 tracking-widest uppercase">all settled</p>
         </div>
       ) : (
         <div className="flex flex-col">
@@ -76,38 +76,35 @@ const SettlementsTab: React.FC<SettlementsTabProps> = ({
         </div>
       )}
 
-      {/* HISTORY Section */}
-      <div className="px-4 pt-8 pb-2">
-        <p className="text-label text-xs text-prowess-grey tracking-widest">HISTORY</p>
-      </div>
+      {/* HISTORY Section - Only show if there are settlements */}
+      {settlements.length > 0 && (
+        <>
+          <div className="px-4 pt-8 pb-2">
+            <p className="text-label text-xs text-prowess-grey tracking-widest">HISTORY</p>
+          </div>
+          <div className="flex flex-col opacity-70">
+            {settlements.map((settlement) => {
+              const from = getMember(settlement.paidBy);
+              const to = getMember(settlement.paidTo);
 
-      {settlements.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12">
-          <p className="text-label text-sm text-prowess-grey/50 tracking-widest">no settlements yet</p>
-        </div>
-      ) : (
-        <div className="flex flex-col opacity-70">
-          {settlements.map((settlement) => {
-            const from = getMember(settlement.paidBy);
-            const to = getMember(settlement.paidTo);
+              if (!from || !to) return null;
 
-            if (!from || !to) return null;
-
-            return (
-              <div
-                key={settlement.id}
-                className="bg-black/30"
-              >
-                <SettlementRow
-                  from={from}
-                  to={to}
-                  amount={settlement.amount}
-                  currency={currency}
-                />
-              </div>
-            );
-          })}
-        </div>
+              return (
+                <div
+                  key={settlement.id}
+                  className="bg-black/30"
+                >
+                  <SettlementRow
+                    from={from}
+                    to={to}
+                    amount={settlement.amount}
+                    currency={currency}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
     </div>
   );

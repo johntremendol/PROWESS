@@ -48,7 +48,8 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
           members: g.members,
           expenses: g.expenses.map((e: any) => ({
             ...e,
-            paidBy: e.paid_by
+            paidBy: e.paid_by,
+            splitBetween: e.split_between
           })).sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         }));
         setGroups(mappedGroups);
@@ -117,6 +118,7 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
         description: expense.description,
         amount: expense.amount,
         paid_by: expense.paidBy,
+        split_between: expense.splitBetween,
         date: expense.date,
         category: expense.category
       };
@@ -131,7 +133,8 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
 
       const newExpense: Expense = {
         ...data,
-        paidBy: data.paid_by
+        paidBy: data.paid_by,
+        splitBetween: data.split_between
       };
 
       const updatedGroup = {
@@ -220,7 +223,8 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
         .update({
           description: updatedExpense.description,
           amount: updatedExpense.amount,
-          paid_by: typeof updatedExpense.paidBy === 'string' ? updatedExpense.paidBy : updatedExpense.paidBy[0].memberId,
+          paid_by: updatedExpense.paidBy,
+          split_between: updatedExpense.splitBetween,
           category: updatedExpense.category,
           date: updatedExpense.date
         })
@@ -237,6 +241,29 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
     } catch (err) {
       console.error("Error updating expense:", err);
       alert("Error updating expense. Check console for details.");
+    }
+  };
+
+  const handleDeleteExpense = async (expenseId: string) => {
+    if (!activeGroup) return;
+
+    try {
+      const { error } = await supabase
+        .from('expenses')
+        .delete()
+        .eq('id', expenseId);
+
+      if (error) throw error;
+
+      const updatedGroup = {
+        ...activeGroup,
+        expenses: activeGroup.expenses.filter(e => e.id !== expenseId)
+      };
+
+      setGroups(groups.map(g => g.id === activeGroup.id ? updatedGroup : g));
+    } catch (err) {
+      console.error("Error deleting expense:", err);
+      alert("Error deleting expense. Check console for details.");
     }
   };
 
@@ -284,6 +311,7 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
         onAddExpense={handleAddExpense}
         onUpdateExpense={handleUpdateExpense}
         onUpdateGroup={(name, members, currency) => handleUpdateGroup(activeGroup.id, name, members, currency)}
+        onDeleteExpense={handleDeleteExpense}
       />
     );
   }

@@ -20,6 +20,7 @@ export interface Expense {
   description: string;
   amount: number;
   paidBy: string | PayerContribution[]; // Member ID or array for multi-payer support
+  splitBetween?: string[]; // Array of Member IDs involved in the split (optional, defaults to all)
   date: string;
   category: string;
 }
