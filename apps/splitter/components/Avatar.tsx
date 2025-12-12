@@ -71,7 +71,7 @@ const Avatar: React.FC<AvatarProps> = ({
   const variantClasses =
     variant === 'outline'
       ? 'bg-stone-900 border border-stone-700 text-prowess-grey'
-      : 'bg-prowess-beige text-prowess-red border-2 border-black';
+      : 'bg-prowess-beige text-prowess-red';
 
   return (
     <div

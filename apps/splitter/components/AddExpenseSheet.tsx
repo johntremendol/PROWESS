@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Member, Expense } from '../../../types';
 import RotatingDial from './RotatingDial';
 import CategoryChipSelector from './CategoryChipSelector';
-import PayerSelector from './PayerSelector';
+import Avatar from './Avatar';
 
 
 interface AddExpenseSheetProps {
@@ -32,8 +32,8 @@ const AddExpenseSheet: React.FC<AddExpenseSheetProps> = ({
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('food');
   const [customCategories, setCustomCategories] = useState<string[]>([]);
-  const [selectedPayers, setSelectedPayers] = useState<string[]>([]);
-  const [payerContributions, setPayerContributions] = useState<Record<string, number>>({});
+  const [selectedPayer, setSelectedPayer] = useState<string | null>(null);
+  const [splitMembers, setSplitMembers] = useState<string[]>([]);
   const [totalAmount, setTotalAmount] = useState(0);
   const [isClosing, setIsClosing] = useState(false);
   const [isTitleEditing, setIsTitleEditing] = useState(false);
@@ -55,17 +55,13 @@ const AddExpenseSheet: React.FC<AddExpenseSheetProps> = ({
     };
   }, []);
 
-  // Auto-split contributions when payers or total amount changes
   useEffect(() => {
-    if (selectedPayers.length > 0 && totalAmount > 0) {
-      const splitAmount = totalAmount / selectedPayers.length;
-      const newContributions: Record<string, number> = {};
-      selectedPayers.forEach(payerId => {
-        newContributions[payerId] = splitAmount;
-      });
-      setPayerContributions(newContributions);
+    // Default selections: first member as payer, everyone in the split
+    if (members.length > 0) {
+      setSelectedPayer(prev => prev ?? members[0].id);
+      setSplitMembers(prev => (prev.length ? prev : members.map(m => m.id)));
     }
-  }, [selectedPayers, totalAmount]);
+  }, [members]);
 
   const handleClose = () => {
     setIsClosing(true);
@@ -75,7 +71,7 @@ const AddExpenseSheet: React.FC<AddExpenseSheetProps> = ({
   };
 
   const handleConfirm = () => {
-    if (!title.trim() || totalAmount <= 0 || selectedPayers.length === 0) {
+    if (!title.trim() || totalAmount <= 0 || !selectedPayer || splitMembers.length === 0) {
       return;
     }
 
@@ -84,7 +80,7 @@ const AddExpenseSheet: React.FC<AddExpenseSheetProps> = ({
     onAdd({
       description: title.trim(),
       amount: totalAmount,
-      paidBy: selectedPayers[0],
+      paidBy: selectedPayer,
       date: new Date().toISOString().split('T')[0],
       category: category,
     });
@@ -92,23 +88,29 @@ const AddExpenseSheet: React.FC<AddExpenseSheetProps> = ({
     handleClose();
   };
 
-  const handlePayersChange = (payers: string[]) => {
-    setSelectedPayers(payers);
-  };
-
-  const handleContributionChange = (memberId: string, amount: number) => {
-    setPayerContributions(prev => ({
-      ...prev,
-      [memberId]: amount,
-    }));
-  };
-
   const handleTitleClick = () => {
     setIsTitleEditing(true);
     setTimeout(() => titleInputRef.current?.focus(), 0);
   };
 
-  const canConfirm = title.trim() && totalAmount > 0 && selectedPayers.length > 0;
+  const toggleSplitMember = (memberId: string) => {
+    setSplitMembers(prev => {
+      if (prev.includes(memberId)) {
+        // keep at least one person in the split
+        if (prev.length === 1) return prev;
+        return prev.filter(id => id !== memberId);
+      }
+      return [...prev, memberId];
+    });
+  };
+
+  const splitShare = splitMembers.length > 0 ? totalAmount / splitMembers.length : 0;
+
+  const formatShare = (amount: number): string => {
+    return `${currency} ${Math.round(amount).toLocaleString()}`;
+  };
+
+  const canConfirm = title.trim() && totalAmount > 0 && selectedPayer && splitMembers.length > 0;
 
   return (
     <>
@@ -125,7 +127,7 @@ const AddExpenseSheet: React.FC<AddExpenseSheetProps> = ({
         className={`fixed inset-x-0 bottom-0 z-50 bg-black flex flex-col transition-transform duration-400 ${isClosing ? 'translate-y-full' : 'translate-y-0'
           }`}
         style={{
-          height: '90vh', // Fixed height for the sheet
+          height: '80vh', // Fixed height for the sheet
           transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >
@@ -150,7 +152,7 @@ const AddExpenseSheet: React.FC<AddExpenseSheetProps> = ({
         </div>
 
         {/* Scrollable Content (Form Fields) */}
-        <div className="flex-1 overflow-y-auto px-6 pt-2 pb-4 space-y-8">
+        <div className="flex-1 overflow-y-auto px-4 pt-2 pb-4 space-y-8">
           {/* Title Section */}
           <div className="border-b border-prowess-grey/20 pb-2">
             <div className="flex items-end justify-between gap-4">
@@ -194,15 +196,57 @@ const AddExpenseSheet: React.FC<AddExpenseSheetProps> = ({
           {/* Paid By Section */}
           <div>
             <p className="text-label text-xs text-prowess-grey mb-4">PAID BY</p>
-            <PayerSelector
-              members={members}
-              selectedPayers={selectedPayers}
-              contributions={payerContributions}
-              totalAmount={totalAmount}
-              onPayersChange={handlePayersChange}
-              onContributionChange={handleContributionChange}
-              currency={currency}
-            />
+            <div className="flex items-center gap-3">
+              {members.map((member) => {
+                const isSelected = selectedPayer === member.id;
+                return (
+                  <button
+                    key={member.id}
+                    onClick={() => setSelectedPayer(member.id)}
+                    className={`rounded-full transition-all ${isSelected ? 'ring-2 ring-prowess-beige/60' : 'opacity-70 hover:opacity-100'}`}
+                    aria-pressed={isSelected}
+                    aria-label={`Paid by ${member.name}`}
+                  >
+                    <Avatar
+                      name={member.name}
+                      size="md"
+                      variant={isSelected ? 'filled' : 'outline'}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Split In Section */}
+          <div className="flex flex-col gap-0">
+            <p className="text-label text-xs text-prowess-grey">SPLIT IN</p>
+            <div className="-mx-4 flex flex-col" style={{ gap: 0 }}>
+              {members.map((member) => {
+                const isIncluded = splitMembers.includes(member.id);
+                return (
+                  <button
+                    key={member.id}
+                    onClick={() => toggleSplitMember(member.id)}
+                    className={`w-full flex items-center justify-between px-4 py-3 transition-all border-0 outline-none m-0 ${isIncluded ? 'bg-[#1F1A17]' : 'bg-black'} hover:bg-[#231d19]`}
+                    style={{ margin: 0 }}
+                    aria-pressed={isIncluded}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Avatar
+                        name={member.name}
+                        size="sm"
+                        variant={isIncluded ? 'filled' : 'outline'}
+                      />
+                      <span className="text-display text-lg text-prowess-beige">{member.name}</span>
+                    </div>
+                    <span className="text-display text-lg text-prowess-beige">
+                      {isIncluded ? formatShare(splitShare) : `${currency} 0`}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
           <div className="h-[300px]"></div>
         </div>
@@ -235,7 +279,7 @@ const AddExpenseSheet: React.FC<AddExpenseSheetProps> = ({
             <button
               onClick={handleConfirm}
               disabled={!canConfirm}
-              className="w-full py-4 bg-white text-black text-label text-sm tracking-widest font-bold uppercase disabled:bg-prowess-grey disabled:opacity-100 disabled:cursor-not-allowed hover:brightness-90 transition-all"
+              className="w-full h-[42px] flex items-center justify-center bg-white text-black text-label text-sm tracking-widest font-bold uppercase disabled:bg-prowess-grey disabled:opacity-100 disabled:cursor-not-allowed hover:brightness-90 transition-all"
             >
               CONFIRM
             </button>
@@ -247,5 +291,11 @@ const AddExpenseSheet: React.FC<AddExpenseSheetProps> = ({
 };
 
 export default AddExpenseSheet;
+
+
+
+
+
+
 
 

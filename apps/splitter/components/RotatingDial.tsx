@@ -241,7 +241,7 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
       >
         {/* Ring Circles SVG Background */}
         <div
-          className="absolute inset-0 transition-transform duration-200 ease-out flex items-center justify-center"
+          className="absolute right-0 bottom-0 transition-transform duration-200 ease-out flex items-center justify-center"
           style={{
             transform: `rotate(${rotation}deg)`,
             transitionProperty: 'transform',
@@ -256,11 +256,11 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
         </div>
 
         {/* Center Content */}
-        <div className="relative z-10 flex flex-col items-center" style={{ marginBottom: '276px' }}>
+        <div className="relative z-10 flex flex-col items-center" style={{ marginBottom: '220px' }}>
           <p className="text-label text-xs text-prowess-grey mb-4 tracking-widest uppercase">AMOUNT</p>
 
           {/* Amount Display/Input */}
-          <div className="flex items-center gap-12 mb-2">
+          <div className="flex items-center gap-8 mb-2">
             <button
               onMouseDown={startDecrement}
               onMouseUp={stopInterval}
@@ -285,13 +285,13 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
                       handleAmountBlur();
                     }
                   }}
-                  className="text-display text-6xl text-prowess-beige bg-transparent outline-none text-center font-normal"
+                  className="text-display text-5xl text-prowess-beige bg-transparent outline-none text-center font-normal"
                   style={{ caretColor: '#D6CFBF' }}
                 />
               ) : (
                 <div
                   onClick={handleAmountClick}
-                  className="text-display text-6xl text-prowess-beige cursor-pointer text-center font-normal"
+                  className="text-display text-5xl text-prowess-beige cursor-pointer text-center font-normal"
                 >
                   {currency}{formatAmount(value)}
                 </div>
@@ -322,5 +322,10 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
 };
 
 export default RotatingDial;
+
+
+
+
+
 
 
