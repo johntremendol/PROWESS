@@ -8,7 +8,6 @@ interface ExpensesTabProps {
   currency: string;
   onAddExpense: () => void;
   onExpenseClick: (expense: Expense) => void;
-  onDeleteExpense?: (expenseId: string) => void;
 }
 
 /**
@@ -21,7 +20,6 @@ const ExpensesTab: React.FC<ExpensesTabProps> = ({
   currency,
   onAddExpense,
   onExpenseClick,
-  onDeleteExpense,
 }) => {
   const getMember = (id: string) => members.find(m => m.id === id);
 
@@ -53,7 +51,6 @@ const ExpensesTab: React.FC<ExpensesTabProps> = ({
               payer={getMember(payerId)}
               currency={currency}
               onClick={() => onExpenseClick(expense)}
-              onDelete={() => onDeleteExpense?.(expense.id)}
             />
           );
         })}

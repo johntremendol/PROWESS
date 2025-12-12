@@ -11,6 +11,7 @@ interface ExpenseSheetProps {
   customCategories?: string[];
   onUpdate?: (updatedExpense: Expense) => void;
   onCustomCategoryAdd?: (category: string) => void;
+  onDelete?: () => void;
   onClose: () => void;
 }
 
@@ -27,6 +28,7 @@ const ExpenseSheet: React.FC<ExpenseSheetProps> = ({
   customCategories = [],
   onUpdate,
   onCustomCategoryAdd,
+  onDelete,
   onClose,
 }) => {
   const [title, setTitle] = useState('');
@@ -340,6 +342,22 @@ const ExpenseSheet: React.FC<ExpenseSheetProps> = ({
               })}
             </div>
           </div>
+
+          {/* Delete Button */}
+          <div className="pt-4 px-0">
+            <button
+              onClick={() => {
+                if (window.confirm('Are you sure you want to delete this expense?')) {
+                  onDelete?.();
+                  onClose();
+                }
+              }}
+              className="w-full h-[50px] flex items-center justify-center bg-prowess-red text-prowess-beige text-label text-sm tracking-widest font-bold uppercase hover:brightness-90 transition-all"
+            >
+              delete expense
+            </button>
+          </div>
+
           <div className="h-[300px]"></div>
         </div>
 
@@ -382,7 +400,7 @@ const ExpenseSheet: React.FC<ExpenseSheetProps> = ({
             </button>
           </div>
         </div>
-      </div>
+      </div >
     </>
   );
 };

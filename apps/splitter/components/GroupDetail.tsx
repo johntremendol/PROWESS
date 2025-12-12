@@ -106,7 +106,6 @@ const GroupDetail: React.FC<GroupDetailProps> = ({
           currency={currency}
           onAddExpense={() => setShowAddExpense(true)}
           onExpenseClick={(expense) => setSelectedExpense(expense)}
-          onDeleteExpense={onDeleteExpense}
         />
       ),
     },
@@ -182,6 +181,12 @@ const GroupDetail: React.FC<GroupDetailProps> = ({
           setSelectedExpense(null);
         }}
         onCustomCategoryAdd={onCustomCategoryAdd}
+        onDelete={() => {
+          if (selectedExpense) {
+            onDeleteExpense?.(selectedExpense.id);
+            setSelectedExpense(null);
+          }
+        }}
         onClose={() => setSelectedExpense(null)}
       />
 
