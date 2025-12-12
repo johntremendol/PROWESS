@@ -29,7 +29,7 @@ interface GroupDetailProps {
   onBack: () => void;
   onAddExpense: (expense: Omit<Expense, 'id'>) => void;
   onUpdateExpense?: (expense: Expense) => void;
-  onUpdateGroup?: (name: string, members: { id: string | null; name: string }[], currency: string) => void;
+  onUpdateGroup?: (name: string, members: { id: string | null; name: string; email?: string }[], currency: string) => void;
   onAddSettlement?: (settlement: Omit<Settlement, 'id'>) => void;
   onDeleteExpense?: (expenseId: string) => void;
   onCustomCategoryAdd?: (category: string) => void;

@@ -8,6 +8,9 @@ export interface Member {
   id: string;
   name: string;
   avatar?: string;
+  email?: string;       // For invites
+  userId?: string;      // Linked profile ID
+  status?: 'active' | 'invited' | 'placeholder';
 }
 
 export interface PayerContribution {
@@ -31,6 +34,7 @@ export interface Group {
   members: Member[];
   expenses: Expense[];
   currency: string;
+  createdBy?: string; // Profile ID of creator
 }
 
 export interface Balance {

@@ -1,7 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
+import { Session } from '@supabase/supabase-js';
 import { supabase } from '../../lib/supabase';
 import { Group, Expense, Member } from '../../types';
 import { calculateBalances, calculateDebts } from './utils';
+import AuthScreen from './components/AuthScreen';
 
 // Components
 import Header from './components/Header';
@@ -16,14 +18,30 @@ interface SplitterAppProps {
 type ViewState = 'GROUPS' | 'CREATE' | 'DETAILS';
 
 const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
+  const [session, setSession] = useState<Session | null>(null);
   const [view, setView] = useState<ViewState>('GROUPS');
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
 
-  // Fetch Groups on Mount
+  // Auth & Data Fetching
   useEffect(() => {
-    fetchGroups();
+    // 1. Get Session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session) fetchGroups();
+    });
+
+    // 2. Listen for Auth Changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session) fetchGroups();
+      else setGroups([]); // Clear data on logout
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const fetchGroups = async () => {
@@ -61,6 +79,11 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
     }
   };
 
+  // Auth Guard
+  if (!session) {
+    return <AuthScreen />;
+  }
+
   const activeGroup = useMemo(() => groups.find(g => g.id === activeGroupId), [groups, activeGroupId]);
   const balances = useMemo(() => activeGroup ? calculateBalances(activeGroup) : [], [activeGroup]);
   const debts = useMemo(() => calculateDebts(balances), [balances]);
@@ -72,7 +95,7 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
       // 1. Create Group
       const { data: groupData, error: groupError } = await supabase
         .from('groups')
-        .insert({ name, currency })
+        .insert({ name, currency, created_by: session?.user.id })
         .select()
         .single();
 
@@ -149,7 +172,7 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
     }
   };
 
-  const handleUpdateGroup = async (groupId: string, name: string, members: { id: string | null; name: string }[], currency: string) => {
+  const handleUpdateGroup = async (groupId: string, name: string, members: { id: string | null; name: string; email?: string }[], currency: string) => {
     try {
       // 1. Update Group Details
       const { error: groupError } = await supabase
@@ -166,7 +189,6 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
       const existingMembers = members.filter(m => m.id);
 
       // B. Identify members to delete
-      // Get current IDs from state
       const currentMemberIds = activeGroup?.members.map(m => m.id) || [];
       const keptMemberIds = existingMembers.map(m => m.id as string);
       const membersToDelete = currentMemberIds.filter(id => !keptMemberIds.includes(id));
@@ -176,7 +198,7 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
         if (!member.id) continue;
         await supabase
           .from('members')
-          .update({ name: member.name })
+          .update({ name: member.name, email: member.email })
           .eq('id', member.id);
       }
 
@@ -186,13 +208,14 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
           .from('members')
           .insert(newMembers.map(m => ({
             group_id: groupId,
-            name: m.name
+            name: m.name,
+            email: m.email,
+            status: m.email ? 'invited' : 'active'
           })));
         if (insertError) throw insertError;
       }
 
       // E. Delete removed members
-      // Note: This may fail if they have expenses. We'll try, and log if it fails.
       if (membersToDelete.length > 0) {
         const { error: deleteError } = await supabase
           .from('members')
@@ -201,7 +224,6 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
 
         if (deleteError) {
           console.warn("Could not delete some members (likely due to existing expenses):", deleteError);
-          // Optional: Notify user
         }
       }
 
@@ -381,6 +403,15 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
             <p className="text-label text-sm mt-2" style={{ textTransform: 'none' }}>Tap "create group" to get started</p>
           </div>
         )}
+        {/* Sign Out Button */}
+        <div className="p-6 mt-auto pb-8">
+          <button
+            onClick={() => supabase.auth.signOut()}
+            className="w-full py-4 text-prowess-red text-label text-xs uppercase tracking-widest border border-prowess-red/30 hover:bg-prowess-red/10 transition-colors"
+          >
+            Sign Out
+          </button>
+        </div>
       </div>
     </div>
   );

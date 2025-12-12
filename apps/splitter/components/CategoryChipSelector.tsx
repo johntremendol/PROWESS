@@ -28,11 +28,25 @@ const CategoryChipSelector: React.FC<CategoryChipSelectorProps> = ({
   const [newCategoryName, setNewCategoryName] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const allCategories = [...customCategories, ...DEFAULT_CATEGORIES];
+  // Filter out 'settlement' and ensure unique values
+  // Also ensure selectedCategory is included if it's valid and not present
+  const allCategories = [
+    ...new Set([
+      ...customCategories,
+      ...DEFAULT_CATEGORIES,
+      selectedCategory // Ensure selected is visible
+    ])
+  ].filter(c => c && c !== 'settlement'); // Filter out empty and 'settlement'
 
   const handleCreateSubmit = () => {
     if (newCategoryName.trim()) {
       const trimmed = newCategoryName.trim().toLowerCase();
+      if (trimmed === 'settlement') { // explicit block
+        setNewCategoryName('');
+        setIsCreating(false);
+        return;
+      }
+
       if (!allCategories.includes(trimmed)) {
         onCustomCategoryAdd(trimmed);
       } else {
