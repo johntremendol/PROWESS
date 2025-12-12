@@ -55,8 +55,19 @@ const GroupDetail: React.FC<GroupDetailProps> = ({
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [showAddSettlement, setShowAddSettlement] = useState(false);
-  const [showEditGroup, setShowEditGroup] = useState(false); // Edit Group State
-  const [settlements, setSettlements] = useState<Settlement[]>([]);
+  const [showEditGroup, setShowEditGroup] = useState(false);
+
+  const settlements: Settlement[] = useMemo(() => {
+    return group.expenses
+      .filter(e => e.category === 'settlement')
+      .map(e => ({
+        id: e.id,
+        amount: e.amount,
+        paidBy: typeof e.paidBy === 'string' ? e.paidBy : e.paidBy[0].memberId,
+        paidTo: e.splitBetween?.[0] || '',
+        date: e.date
+      }));
+  }, [group.expenses]);
 
   // Extract unique custom categories from existing expenses (excluding defaults)
   const customCategories = useMemo(() => {
@@ -68,11 +79,6 @@ const GroupDetail: React.FC<GroupDetailProps> = ({
   }, [group.expenses]);
 
   const handleAddSettlement = (settlement: Omit<Settlement, 'id'>) => {
-    const newSettlement: Settlement = {
-      ...settlement,
-      id: Date.now().toString(),
-    };
-    setSettlements([newSettlement, ...settlements]);
     onAddSettlement?.(settlement);
   };
 
@@ -95,7 +101,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({
       label: 'EXPENSES',
       content: (
         <ExpensesTab
-          expenses={group.expenses}
+          expenses={group.expenses.filter(e => e.category !== 'settlement')}
           members={group.members}
           currency={currency}
           onAddExpense={() => setShowAddExpense(true)}

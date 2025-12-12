@@ -288,6 +288,22 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
     }
   };
 
+  const handleAddSettlement = async (settlement: { paidBy: string; paidTo: string; amount: number; date: string }) => {
+    // Convert settlement to expense logic
+    // A settlement is effectively a payment from A to B, which creates a debt from B to A.
+    // This cancels out the existing debt from A to B.
+    const expensePayload = {
+      description: 'Settlement',
+      amount: settlement.amount,
+      paidBy: settlement.paidBy,
+      splitBetween: [settlement.paidTo],
+      category: 'settlement',
+      date: settlement.date
+    };
+
+    await handleAddExpense(expensePayload);
+  };
+
   // --- Views ---
 
   // CREATE VIEW
@@ -312,6 +328,7 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
         onUpdateExpense={handleUpdateExpense}
         onUpdateGroup={(name, members, currency) => handleUpdateGroup(activeGroup.id, name, members, currency)}
         onDeleteExpense={handleDeleteExpense}
+        onAddSettlement={handleAddSettlement}
       />
     );
   }
