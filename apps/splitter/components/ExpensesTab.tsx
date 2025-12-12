@@ -33,7 +33,7 @@ const ExpensesTab: React.FC<ExpensesTabProps> = ({
         <div className="w-10 h-10 rounded-full border border-prowess-beige/50 flex items-center justify-center">
           <Plus size={20} className="text-prowess-beige" />
         </div>
-        <span className="text-display text-2xl text-prowess-beige italic">Add Expense</span>
+        <span className="text-display text-2xl text-prowess-beige italic">New Expense</span>
       </button>
 
       {/* Expenses List */}
@@ -60,7 +60,7 @@ const ExpensesTab: React.FC<ExpensesTabProps> = ({
       {expenses.length === 0 && (
         <div className="text-center py-16 text-prowess-grey">
           <p className="text-sm text-label">No Expenses Yet</p>
-          <p className="text-xs mt-2">Tap "Add Expense" to start</p>
+          <p className="text-xs mt-2">Tap "New Expense" to start</p>
         </div>
       )}
     </div>

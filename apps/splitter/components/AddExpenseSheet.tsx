@@ -8,7 +8,9 @@ import Avatar from './Avatar';
 interface AddExpenseSheetProps {
   members: Member[];
   currency: string;
+  customCategories?: string[];
   onAdd: (expense: Omit<Expense, 'id'>) => void;
+  onCustomCategoryAdd?: (category: string) => void;
   onClose: () => void;
 }
 
@@ -26,12 +28,13 @@ interface AddExpenseSheetProps {
 const AddExpenseSheet: React.FC<AddExpenseSheetProps> = ({
   members,
   currency,
+  customCategories = [],
   onAdd,
+  onCustomCategoryAdd,
   onClose,
 }) => {
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('food');
-  const [customCategories, setCustomCategories] = useState<string[]>([]);
   const [selectedPayer, setSelectedPayer] = useState<string | null>(null);
   const [splitMembers, setSplitMembers] = useState<string[]>([]);
   const [totalAmount, setTotalAmount] = useState(0);
@@ -152,7 +155,7 @@ const AddExpenseSheet: React.FC<AddExpenseSheetProps> = ({
         </div>
 
         {/* Scrollable Content (Form Fields) */}
-        <div className="flex-1 overflow-y-auto px-4 pt-2 pb-4 space-y-8">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden px-6 pt-2 pb-4 space-y-8">
           {/* Title Section */}
           <div className="border-b border-prowess-grey/20 pb-2">
             <div className="flex items-end justify-between gap-4">
@@ -187,7 +190,7 @@ const AddExpenseSheet: React.FC<AddExpenseSheetProps> = ({
               customCategories={customCategories}
               onCategorySelect={setCategory}
               onCustomCategoryAdd={(newCat: string) => {
-                setCustomCategories([newCat, ...customCategories]);
+                onCustomCategoryAdd?.(newCat);
                 setCategory(newCat);
               }}
             />
@@ -228,8 +231,8 @@ const AddExpenseSheet: React.FC<AddExpenseSheetProps> = ({
                   <button
                     key={member.id}
                     onClick={() => toggleSplitMember(member.id)}
-                    className={`w-full flex items-center justify-between px-4 py-3 transition-all border-0 outline-none m-0 ${isIncluded ? 'bg-[#1F1A17]' : 'bg-black'} hover:bg-[#231d19]`}
-                    style={{ margin: 0 }}
+                    className={`w-full flex items-center justify-between px-6 py-3 transition-all border-0 outline-none focus:outline-none focus:ring-0 m-0 ${isIncluded ? 'bg-[#1F1A17]' : 'bg-black'} hover:bg-[#231d19]`}
+                    style={{ margin: 0, border: 'none', boxShadow: 'none' }}
                     aria-pressed={isIncluded}
                   >
                     <div className="flex items-center gap-3">

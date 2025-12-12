@@ -60,7 +60,7 @@ const CategoryChipSelector: React.FC<CategoryChipSelectorProps> = ({
 
   return (
     <div
-      className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide font-serif -mx-6 px-6"
+      className="flex gap-2 overflow-x-auto overflow-y-hidden pb-2 scrollbar-hide font-serif -mx-6 px-6"
       style={{ fontFamily: 'Palatino, serif' }}
     >
       {/* New Category Chip - First Item */}
@@ -108,3 +108,8 @@ const CategoryChipSelector: React.FC<CategoryChipSelectorProps> = ({
 };
 
 export default CategoryChipSelector;
+
+
+
+
+

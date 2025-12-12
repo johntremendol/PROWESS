@@ -1,49 +1,116 @@
 import { Member, Debt } from '../../../types';
+import { Plus } from '../../../components/ui/Icons';
 import SettlementRow from './SettlementRow';
+
+interface Settlement {
+  id: string;
+  paidBy: string;
+  paidTo: string;
+  amount: number;
+  date: string;
+}
 
 interface SettlementsTabProps {
   debts: Debt[];
   members: Member[];
   currency: string;
+  settlements?: Settlement[];
+  onNewSettlement: () => void;
 }
 
 /**
- * Settlements tab showing who owes whom.
- * Uses SettlementRow component for consistent styling.
+ * Settlements tab showing:
+ * - New Settlement button (red bar)
+ * - PENDING section with calculated debts
+ * - HISTORY section with recorded settlements
  */
-const SettlementsTab: React.FC<SettlementsTabProps> = ({ debts, members, currency }) => {
+const SettlementsTab: React.FC<SettlementsTabProps> = ({
+  debts,
+  members,
+  currency,
+  settlements = [],
+  onNewSettlement,
+}) => {
   const getMember = (id: string) => members.find(m => m.id === id);
-
-  if (debts.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 text-prowess-grey">
-        <div className="text-4xl mb-4">✓</div>
-        <p className="text-sm text-label">All Settled Up</p>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col">
-      {debts.map((debt, idx) => {
-        const from = getMember(debt.from);
-        const to = getMember(debt.to);
-        
-        if (!from || !to) return null;
+      {/* New Settlement Button - Red Bar */}
+      <button
+        onClick={onNewSettlement}
+        className="w-full bg-prowess-red py-6 px-4 flex items-center gap-3 hover:brightness-110 transition-all"
+      >
+        <div className="w-10 h-10 rounded-full border border-prowess-beige/50 flex items-center justify-center">
+          <Plus size={20} className="text-prowess-beige" />
+        </div>
+        <span className="text-display text-2xl text-prowess-beige italic">New Settlement</span>
+      </button>
 
-        return (
-          <SettlementRow
-            key={idx}
-            from={from}
-            to={to}
-            amount={debt.amount}
-            currency={currency}
-          />
-        );
-      })}
+      {/* PENDING Section */}
+      <div className="px-4 pt-6 pb-2">
+        <p className="text-label text-xs text-prowess-grey tracking-widest">PENDING</p>
+      </div>
+
+      {debts.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12">
+          <p className="text-label text-lg text-prowess-grey tracking-widest">all settled</p>
+        </div>
+      ) : (
+        <div className="flex flex-col">
+          {debts.map((debt, idx) => {
+            const from = getMember(debt.from);
+            const to = getMember(debt.to);
+
+            if (!from || !to) return null;
+
+            return (
+              <SettlementRow
+                key={idx}
+                from={from}
+                to={to}
+                amount={debt.amount}
+                currency={currency}
+              />
+            );
+          })}
+        </div>
+      )}
+
+      {/* HISTORY Section */}
+      <div className="px-4 pt-8 pb-2">
+        <p className="text-label text-xs text-prowess-grey tracking-widest">HISTORY</p>
+      </div>
+
+      {settlements.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12">
+          <p className="text-label text-sm text-prowess-grey/50 tracking-widest">no settlements yet</p>
+        </div>
+      ) : (
+        <div className="flex flex-col opacity-70">
+          {settlements.map((settlement) => {
+            const from = getMember(settlement.paidBy);
+            const to = getMember(settlement.paidTo);
+
+            if (!from || !to) return null;
+
+            return (
+              <div
+                key={settlement.id}
+                className="bg-black/30"
+              >
+                <SettlementRow
+                  from={from}
+                  to={to}
+                  amount={settlement.amount}
+                  currency={currency}
+                />
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
 
 export default SettlementsTab;
-

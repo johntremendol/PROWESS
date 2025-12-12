@@ -66,12 +66,12 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
 
   // --- Actions ---
 
-  const handleCreateGroup = async (name: string, members: { id: string; name: string }[]) => {
+  const handleCreateGroup = async (name: string, members: { id: string; name: string }[], currency: string = '$') => {
     try {
       // 1. Create Group
       const { data: groupData, error: groupError } = await supabase
         .from('groups')
-        .insert({ name, currency: '$' })
+        .insert({ name, currency })
         .select()
         .single();
 
@@ -146,17 +146,111 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
     }
   };
 
+  const handleUpdateGroup = async (groupId: string, name: string, members: { id: string | null; name: string }[], currency: string) => {
+    try {
+      // 1. Update Group Details
+      const { error: groupError } = await supabase
+        .from('groups')
+        .update({ name, currency })
+        .eq('id', groupId);
+
+      if (groupError) throw groupError;
+
+      // 2. Handle Members
+
+      // A. Identify members to add (no ID) and update (has ID)
+      const newMembers = members.filter(m => !m.id);
+      const existingMembers = members.filter(m => m.id);
+
+      // B. Identify members to delete
+      // Get current IDs from state
+      const currentMemberIds = activeGroup?.members.map(m => m.id) || [];
+      const keptMemberIds = existingMembers.map(m => m.id as string);
+      const membersToDelete = currentMemberIds.filter(id => !keptMemberIds.includes(id));
+
+      // C. Update existing members
+      for (const member of existingMembers) {
+        if (!member.id) continue;
+        await supabase
+          .from('members')
+          .update({ name: member.name })
+          .eq('id', member.id);
+      }
+
+      // D. Insert new members
+      if (newMembers.length > 0) {
+        const { error: insertError } = await supabase
+          .from('members')
+          .insert(newMembers.map(m => ({
+            group_id: groupId,
+            name: m.name
+          })));
+        if (insertError) throw insertError;
+      }
+
+      // E. Delete removed members
+      // Note: This may fail if they have expenses. We'll try, and log if it fails.
+      if (membersToDelete.length > 0) {
+        const { error: deleteError } = await supabase
+          .from('members')
+          .delete()
+          .in('id', membersToDelete);
+
+        if (deleteError) {
+          console.warn("Could not delete some members (likely due to existing expenses):", deleteError);
+          // Optional: Notify user
+        }
+      }
+
+      // 3. Refresh State (Fetch fresh data to be safe)
+      await fetchGroups();
+
+    } catch (err) {
+      console.error("Error updating group:", err);
+      alert("Error updating group. Check console.");
+    }
+  };
+
+  const handleUpdateExpense = async (updatedExpense: Expense) => {
+    if (!activeGroup) return;
+
+    try {
+      const { error } = await supabase
+        .from('expenses')
+        .update({
+          description: updatedExpense.description,
+          amount: updatedExpense.amount,
+          paid_by: typeof updatedExpense.paidBy === 'string' ? updatedExpense.paidBy : updatedExpense.paidBy[0].memberId,
+          category: updatedExpense.category,
+          date: updatedExpense.date
+        })
+        .eq('id', updatedExpense.id);
+
+      if (error) throw error;
+
+      const updatedGroup = {
+        ...activeGroup,
+        expenses: activeGroup.expenses.map(e => e.id === updatedExpense.id ? updatedExpense : e)
+      };
+
+      setGroups(groups.map(g => g.id === activeGroup.id ? updatedGroup : g));
+    } catch (err) {
+      console.error("Error updating expense:", err);
+      alert("Error updating expense. Check console for details.");
+    }
+  };
+
   const handleDeleteGroup = async (groupId: string) => {
     try {
       // Delete expenses first (foreign key constraint)
       await supabase.from('expenses').delete().eq('group_id', groupId);
-      
+
       // Delete members
       await supabase.from('members').delete().eq('group_id', groupId);
-      
+
       // Delete the group
       const { error } = await supabase.from('groups').delete().eq('id', groupId);
-      
+
       if (error) throw error;
 
       // Update local state
@@ -188,6 +282,8 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
         currency={activeGroup.currency}
         onBack={() => setView('GROUPS')}
         onAddExpense={handleAddExpense}
+        onUpdateExpense={handleUpdateExpense}
+        onUpdateGroup={(name, members, currency) => handleUpdateGroup(activeGroup.id, name, members, currency)}
       />
     );
   }
@@ -201,7 +297,7 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
       {/* Content - Full Width, No Padding */}
       <div className="flex-1 flex flex-col">
         {/* Create Group Button - Full Width Red */}
-        <button 
+        <button
           onClick={() => setView('CREATE')}
           className="w-full bg-prowess-red px-5 py-6 text-left hover:brightness-110 transition-all"
         >
@@ -209,7 +305,7 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
           <div className="w-9 h-9 rounded-full border border-prowess-beige/50 flex items-center justify-center text-prowess-beige text-lg">
             +
           </div>
-                </button>
+        </button>
 
         {/* Loading State */}
         {loading && (
@@ -240,7 +336,7 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
             <p className="text-label text-sm mt-2" style={{ textTransform: 'none' }}>Tap "create group" to get started</p>
           </div>
         )}
-        </div>
+      </div>
     </div>
   );
 };
