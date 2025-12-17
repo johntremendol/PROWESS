@@ -254,7 +254,7 @@ const CreateFlow: React.FC<CreateFlowProps> = ({ onCreateGroup, onCancel }) => {
         <div className="flex-none w-full px-6 pb-6 pt-4 bg-black">
           <button
             onClick={canConfirm ? handleConfirm : onCancel}
-            className={`w-full h-[48px] flex items-center justify-center text-label text-sm tracking-widest font-bold uppercase transition-all ${canConfirm
+            className={`w-full h-[48px] flex items-center justify-center text-label text-sm tracking-widest font-bold uppercase transition-all rounded-none ${canConfirm
               ? 'bg-white text-black hover:brightness-90'
               : 'bg-white text-black hover:brightness-90'
               }`}

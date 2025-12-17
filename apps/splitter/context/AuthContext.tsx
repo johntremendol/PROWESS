@@ -46,8 +46,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const signInWithEmail = async (email: string) => {
         // Magic link login
-        // Redirect to the current URL after login
-        const redirectTo = typeof window !== 'undefined' ? window.location.origin : undefined;
+        // Redirect to the current URL after login, but force production URL if not localhost
+        let redirectTo = typeof window !== 'undefined' ? window.location.origin : undefined;
+        if (redirectTo && !redirectTo.includes('localhost')) {
+            redirectTo = 'https://prowess-two.vercel.app/';
+        }
 
         return await supabase.auth.signInWithOtp({
             email,

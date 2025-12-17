@@ -40,7 +40,7 @@ const LoginPage: React.FC = () => {
                 </p>
                 <button
                     onClick={() => setSent(false)}
-                    className="mt-8 text-label text-xs text-prowess-red hover:text-white transition-colors uppercase tracking-widest"
+                    className="mt-8 text-label text-xs text-prowess-red hover:text-white transition-colors uppercase tracking-widest rounded-none"
                 >
                     Try a different email
                 </button>
@@ -69,7 +69,7 @@ const LoginPage: React.FC = () => {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="name@example.com"
-                            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-4 text-prowess-beige text-lg placeholder:text-white/20 focus:outline-none focus:border-prowess-beige/50 transition-colors"
+                            className="w-full bg-white/5 border border-white/10 rounded-none px-4 py-4 text-prowess-beige text-lg placeholder:text-white/20 focus:outline-none focus:border-prowess-beige/50 transition-colors"
                             required
                         />
                     </div>
@@ -83,7 +83,7 @@ const LoginPage: React.FC = () => {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-prowess-beige text-black py-4 rounded-lg text-label text-sm font-bold tracking-widest uppercase hover:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full bg-prowess-beige text-black py-4 rounded-none text-label text-sm font-bold tracking-widest uppercase hover:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {loading ? 'Sending...' : 'Send Magic Link'}
                     </button>

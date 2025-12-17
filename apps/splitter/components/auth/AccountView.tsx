@@ -72,7 +72,7 @@ const AccountView: React.FC<AccountViewProps> = ({ onClose }) => {
                             onClose();
                         }
                     }}
-                    className="w-full py-4 border border-prowess-red text-prowess-red rounded-lg text-label text-sm uppercase tracking-widest hover:bg-prowess-red hover:text-white transition-all"
+                    className="w-full py-4 border border-prowess-red text-prowess-red rounded-none text-label text-sm uppercase tracking-widest hover:bg-prowess-red hover:text-white transition-all"
                 >
                     Sign Out
                 </button>
