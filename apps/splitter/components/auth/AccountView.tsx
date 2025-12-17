@@ -32,35 +32,7 @@ const AccountView: React.FC<AccountViewProps> = ({ onClose }) => {
                     </div>
                 </div>
 
-                <div className="border-t border-white/10 pt-8 mt-4 space-y-6">
-                    <div>
-                        <h3 className="text-label text-xs text-prowess-grey mb-2 uppercase tracking-widest">My Data</h3>
-                        <div className="p-4 bg-white/5 rounded-lg space-y-4">
-                            <p className="text-sm text-prowess-beige/80">
-                                Your expense data is securely stored and linked to your email address.
-                            </p>
 
-                            {/* Manual Migration Trigger */}
-                            <button
-                                onClick={async () => {
-                                    if (confirm('This will link all data created by "John" to your account. Continue?')) {
-                                        try {
-                                            const { error } = await import('../../../../lib/supabase').then(m => m.supabase.rpc('migrate_prowess_data', { target_email: user.email }));
-                                            if (error) throw error;
-                                            alert('Migration successful! Please refresh the page.');
-                                        } catch (e: any) {
-                                            console.error(e);
-                                            alert('Migration failed: ' + e.message);
-                                        }
-                                    }
-                                }}
-                                className="text-xs text-prowess-beige underline hover:text-white"
-                            >
-                                Claim existing "John" data
-                            </button>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <div className="p-6">
