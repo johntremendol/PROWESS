@@ -369,6 +369,7 @@ const SplitterInner: React.FC<SplitterAppProps> = ({ onBack }) => {
   if (view === 'CREATE') {
     return (
       <CreateFlow
+        initialMemberName={user?.email ? user.email.split('@')[0] : 'Me'}
         onCreateGroup={handleCreateGroup}
         onCancel={() => setView('GROUPS')}
       />

@@ -8,6 +8,7 @@ interface TempMember {
 }
 
 interface CreateFlowProps {
+  initialMemberName?: string;
   onCreateGroup: (name: string, members: TempMember[], currency: string) => void;
   onCancel: () => void;
 }
@@ -37,11 +38,13 @@ const CURRENCIES = [
  * - Add Members button in red
  * - White CONFIRM button at bottom
  */
-const CreateFlow: React.FC<CreateFlowProps> = ({ onCreateGroup, onCancel }) => {
+const CreateFlow: React.FC<CreateFlowProps> = ({ initialMemberName, onCreateGroup, onCancel }) => {
   const [groupName, setGroupName] = useState('');
   const [currencyIndex, setCurrencyIndex] = useState(0);
   const [memberName, setMemberName] = useState('');
-  const [members, setMembers] = useState<TempMember[]>([]);
+  const [members, setMembers] = useState<TempMember[]>(
+    initialMemberName ? [{ id: 'creator', name: initialMemberName }] : []
+  );
   const [isNameEditing, setIsNameEditing] = useState(true);
   const [isMemberInputVisible, setIsMemberInputVisible] = useState(false);
 
