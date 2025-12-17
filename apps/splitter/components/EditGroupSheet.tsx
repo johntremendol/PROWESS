@@ -40,7 +40,7 @@ const EditGroupSheet: React.FC<EditGroupSheetProps> = ({ group, onUpdateGroup, o
 
     // Mixed existing (has ID) and new (id=null for now) members
     const [members, setMembers] = useState<{ id: string | null; name: string; email?: string }[]>(
-        group.members.map(m => ({ id: m.id, name: m.name, email: m.email }))
+        group.members.map(m => ({ id: m.id, name: m.name, email: m.email || undefined }))
     );
 
     const [memberName, setMemberName] = useState('');
@@ -107,12 +107,6 @@ const EditGroupSheet: React.FC<EditGroupSheetProps> = ({ group, onUpdateGroup, o
     const handleEditMemberName = (index: number, newName: string) => {
         const newMembers = [...members];
         newMembers[index].name = newName;
-        setMembers(newMembers);
-    };
-
-    const handleEditMemberEmail = (index: number, newEmail: string) => {
-        const newMembers = [...members];
-        newMembers[index].email = newEmail;
         setMembers(newMembers);
     };
 
@@ -266,40 +260,43 @@ const EditGroupSheet: React.FC<EditGroupSheetProps> = ({ group, onUpdateGroup, o
                                 {members.map((member, index) => (
                                     <div
                                         key={index}
-                                        className="w-full flex flex-col px-6 py-4 transition-all bg-[#1F1A17] hover:bg-[#231d19] border-b border-prowess-grey/5 gap-2"
+                                        className="w-full flex items-center justify-between px-6 py-4 transition-all bg-[#1F1A17] hover:bg-[#231d19]"
                                     >
-                                        <div className="flex items-center justify-between w-full">
-                                            <div className="flex items-center gap-3 flex-1">
-                                                <Avatar
-                                                    name={member.name}
-                                                    size="md"
-                                                    variant="outline"
-                                                />
+                                        <div className="flex items-center gap-3 flex-1">
+                                            <Avatar
+                                                name={member.name}
+                                                size="md"
+                                                variant="outline"
+                                            />
+                                            <div className="flex flex-col flex-1 gap-1">
                                                 <input
                                                     type="text"
                                                     value={member.name}
                                                     onChange={(e) => handleEditMemberName(index, e.target.value)}
+                                                    placeholder="name"
                                                     className="bg-transparent text-display text-lg text-prowess-beige focus:outline-none border-b border-transparent focus:border-prowess-beige/50 w-full"
                                                 />
+                                                <input
+                                                    type="email"
+                                                    value={member.email || ''}
+                                                    onChange={(e) => {
+                                                        const newMembers = [...members];
+                                                        newMembers[index] = { ...member, email: e.target.value };
+                                                        setMembers(newMembers);
+                                                    }}
+                                                    placeholder="add email to connect"
+                                                    className="bg-transparent text-label text-xs text-prowess-grey focus:outline-none border-b border-transparent focus:border-prowess-beige/30 w-full placeholder:text-prowess-grey/30"
+                                                />
                                             </div>
-                                            <button
-                                                onClick={() => handleRemoveMember(index)}
-                                                className="text-label text-xs text-prowess-grey hover:text-prowess-beige transition-colors uppercase tracking-widest pl-4"
-                                            >
-                                                <Trash2 size={18} />
-                                            </button>
                                         </div>
-
-                                        {/* Invite / Email Field */}
-                                        <div className="pl-[52px]">
-                                            <input
-                                                type="email"
-                                                value={member.email || ''}
-                                                onChange={(e) => handleEditMemberEmail(index, e.target.value)}
-                                                placeholder="+ Add email to invite"
-                                                className="w-full bg-transparent text-label text-xs text-prowess-beige/70 placeholder:text-prowess-grey/40 focus:outline-none focus:text-prowess-beige"
-                                            />
-                                        </div>
+                                        {/* Only show trash if it's a new member or if we handle deletion properly */}
+                                        {/* For now allowing deletion UI but backend might reject if expenses exist */}
+                                        <button
+                                            onClick={() => handleRemoveMember(index)}
+                                            className="text-label text-xs text-prowess-grey hover:text-prowess-beige transition-colors uppercase tracking-widest pl-4"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
                                     </div>
                                 ))}
                             </div>

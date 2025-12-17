@@ -1,9 +1,12 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Session } from '@supabase/supabase-js';
 import { supabase } from '../../lib/supabase';
 import { Group, Expense, Member } from '../../types';
 import { calculateBalances, calculateDebts } from './utils';
-import AuthScreen from './components/AuthScreen';
+
+// Auth
+import { AuthProvider, useAuth } from './context/AuthContext';
+import LoginPage from './components/auth/LoginPage';
+import AccountView from './components/auth/AccountView';
 
 // Components
 import Header from './components/Header';
@@ -17,32 +20,22 @@ interface SplitterAppProps {
 
 type ViewState = 'GROUPS' | 'CREATE' | 'DETAILS';
 
-const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
-  const [session, setSession] = useState<Session | null>(null);
+const SplitterInner: React.FC<SplitterAppProps> = ({ onBack }) => {
+  const { user, loading: authLoading } = useAuth();
   const [view, setView] = useState<ViewState>('GROUPS');
+  const [showAccount, setShowAccount] = useState(false);
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
 
-  // Auth & Data Fetching
+  // Fetch Groups on Mount or when User changes
   useEffect(() => {
-    // 1. Get Session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session) fetchGroups();
-    });
-
-    // 2. Listen for Auth Changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session) fetchGroups();
-      else setGroups([]); // Clear data on logout
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+    if (user) {
+      fetchGroups();
+    } else {
+      setGroups([]);
+    }
+  }, [user]);
 
   const fetchGroups = async () => {
     setLoading(true);
@@ -79,11 +72,6 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
     }
   };
 
-  // Auth Guard
-  if (!session) {
-    return <AuthScreen />;
-  }
-
   const activeGroup = useMemo(() => groups.find(g => g.id === activeGroupId), [groups, activeGroupId]);
   const balances = useMemo(() => activeGroup ? calculateBalances(activeGroup) : [], [activeGroup]);
   const debts = useMemo(() => calculateDebts(balances), [balances]);
@@ -92,20 +80,32 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
 
   const handleCreateGroup = async (name: string, members: { id: string; name: string }[], currency: string = '$') => {
     try {
+      if (!user) throw new Error("Must be logged in");
+
       // 1. Create Group
       const { data: groupData, error: groupError } = await supabase
         .from('groups')
-        .insert({ name, currency, created_by: session?.user.id })
+        .insert({ name, currency })
         .select()
         .single();
 
       if (groupError) throw groupError;
 
       // 2. Create Members
-      const membersPayload = members.map(m => ({
-        group_id: groupData.id,
-        name: m.name
-      }));
+      // The first member is the creator (John or user's name). We link it to auth user.
+      const membersPayload = members.map((m, index) => {
+        // Simple heuristic: First member is creator
+        // In real app, we might ask "Which one is you?" or assume index 0 if it matches known user name
+        // For now, let's assume the first member added is the creator.
+        const isCreator = index === 0;
+
+        return {
+          group_id: groupData.id,
+          name: m.name,
+          user_id: isCreator ? user.id : null,
+          email: isCreator ? user.email : null
+        };
+      });
 
       const { data: membersData, error: membersError } = await supabase
         .from('members')
@@ -172,6 +172,25 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
     }
   };
 
+  // Auto-claim logic: When logging in, check if there are any members with my email but no user_id (or different user_id?)
+  // Actually, the migration script handles the bulk case.
+  // Here we just ensure that if I am added to a group by email, I claim it.
+  useEffect(() => {
+    const claimMembers = async () => {
+      if (!user || loading) return;
+
+      const { error } = await supabase
+        .from('members')
+        .update({ user_id: user.id })
+        .eq('email', user.email)
+        .is('user_id', null);
+
+      if (error) console.error("Auto-claim failed:", error);
+    };
+
+    claimMembers();
+  }, [user, loading]);
+
   const handleUpdateGroup = async (groupId: string, name: string, members: { id: string | null; name: string; email?: string }[], currency: string) => {
     try {
       // 1. Update Group Details
@@ -189,6 +208,7 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
       const existingMembers = members.filter(m => m.id);
 
       // B. Identify members to delete
+      // Get current IDs from state
       const currentMemberIds = activeGroup?.members.map(m => m.id) || [];
       const keptMemberIds = existingMembers.map(m => m.id as string);
       const membersToDelete = currentMemberIds.filter(id => !keptMemberIds.includes(id));
@@ -209,13 +229,13 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
           .insert(newMembers.map(m => ({
             group_id: groupId,
             name: m.name,
-            email: m.email,
-            status: m.email ? 'invited' : 'active'
+            email: m.email
           })));
         if (insertError) throw insertError;
       }
 
       // E. Delete removed members
+      // Note: This may fail if they have expenses. We'll try, and log if it fails.
       if (membersToDelete.length > 0) {
         const { error: deleteError } = await supabase
           .from('members')
@@ -224,6 +244,7 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
 
         if (deleteError) {
           console.warn("Could not delete some members (likely due to existing expenses):", deleteError);
+          // Optional: Notify user
         }
       }
 
@@ -326,6 +347,22 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
     await handleAddExpense(expensePayload);
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-label text-sm text-prowess-grey animate-pulse">Initializing...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginPage />;
+  }
+
+  if (showAccount) {
+    return <AccountView onClose={() => setShowAccount(false)} />;
+  }
+
   // --- Views ---
 
   // CREATE VIEW
@@ -359,7 +396,10 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
   return (
     <div className="min-h-screen bg-black flex flex-col">
       {/* Header */}
-      <Header onBack={onBack} />
+      <Header
+        onBack={onBack}
+        onProfileClick={() => setShowAccount(true)}
+      />
 
       {/* Content - Full Width, No Padding */}
       <div className="flex-1 flex flex-col">
@@ -403,17 +443,16 @@ const SplitterApp: React.FC<SplitterAppProps> = ({ onBack }) => {
             <p className="text-label text-sm mt-2" style={{ textTransform: 'none' }}>Tap "create group" to get started</p>
           </div>
         )}
-        {/* Sign Out Button */}
-        <div className="p-6 mt-auto pb-8">
-          <button
-            onClick={() => supabase.auth.signOut()}
-            className="w-full py-4 text-prowess-red text-label text-xs uppercase tracking-widest border border-prowess-red/30 hover:bg-prowess-red/10 transition-colors"
-          >
-            Sign Out
-          </button>
-        </div>
       </div>
     </div>
+  );
+};
+
+const SplitterApp: React.FC<SplitterAppProps> = (props) => {
+  return (
+    <AuthProvider>
+      <SplitterInner {...props} />
+    </AuthProvider>
   );
 };
 
