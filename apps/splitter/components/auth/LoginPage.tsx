@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { RotatingLines } from 'react-loader-spinner'; // Assuming we might want a spinner, but using simple text for now to avoid dep check
+
 
 const LoginPage: React.FC = () => {
     const [email, setEmail] = useState('');

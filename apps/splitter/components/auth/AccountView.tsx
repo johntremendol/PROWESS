@@ -45,7 +45,7 @@ const AccountView: React.FC<AccountViewProps> = ({ onClose }) => {
                                 onClick={async () => {
                                     if (confirm('This will link all data created by "John" to your account. Continue?')) {
                                         try {
-                                            const { data, error } = await import('../../lib/supabase').then(m => m.supabase.rpc('migrate_prowess_data', { target_email: user.email }));
+                                            const { error } = await import('../../../../lib/supabase').then(m => m.supabase.rpc('migrate_prowess_data', { target_email: user.email }));
                                             if (error) throw error;
                                             alert('Migration successful! Please refresh the page.');
                                         } catch (e: any) {
