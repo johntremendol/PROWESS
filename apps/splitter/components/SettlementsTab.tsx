@@ -16,6 +16,7 @@ interface SettlementsTabProps {
   currency: string;
   settlements?: Settlement[];
   onNewSettlement: () => void;
+  onSettlementClick?: (settlement: Settlement) => void;
 }
 
 /**
@@ -30,6 +31,7 @@ const SettlementsTab: React.FC<SettlementsTabProps> = ({
   currency,
   settlements = [],
   onNewSettlement,
+  onSettlementClick,
 }) => {
   const getMember = (id: string) => members.find(m => m.id === id);
 
@@ -92,7 +94,8 @@ const SettlementsTab: React.FC<SettlementsTabProps> = ({
               return (
                 <div
                   key={settlement.id}
-                  className="bg-black/30"
+                  className="bg-black/30 cursor-pointer hover:bg-black/50 transition-colors"
+                  onClick={() => onSettlementClick?.(settlement)}
                 >
                   <SettlementRow
                     from={from}

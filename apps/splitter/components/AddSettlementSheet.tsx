@@ -3,10 +3,21 @@ import { Member } from '../../../types';
 import RotatingDial from './RotatingDial';
 import Avatar from './Avatar';
 
+interface SettlementData {
+    id?: string;
+    paidBy: string;
+    paidTo: string;
+    amount: number;
+    date: string;
+}
+
 interface AddSettlementSheetProps {
     members: Member[];
     currency: string;
-    onAdd: (settlement: { paidBy: string; paidTo: string; amount: number; date: string }) => void;
+    onAdd?: (settlement: Omit<SettlementData, 'id'>) => void;
+    onUpdate?: (settlement: SettlementData) => void;
+    onDelete?: () => void;
+    initialSettlement?: SettlementData;
     onClose: () => void;
 }
 
@@ -18,12 +29,16 @@ interface AddSettlementSheetProps {
  * - PAID BY: Single payer selection
  * - PAID TO: Single recipient selection with amount display
  * - Rotating dial for amount input
- * - CONFIRM button
+ * - CONFIRM/UPDATE button
+ * - DELETE button (in edit mode)
  */
 const AddSettlementSheet: React.FC<AddSettlementSheetProps> = ({
     members,
     currency,
     onAdd,
+    onUpdate,
+    onDelete,
+    initialSettlement,
     onClose,
 }) => {
     const [paidBy, setPaidBy] = useState<string | null>(null);
@@ -41,14 +56,20 @@ const AddSettlementSheet: React.FC<AddSettlementSheetProps> = ({
     }, []);
 
     useEffect(() => {
-        // Default: first member as payer, second as recipient
-        if (members.length > 0) {
-            setPaidBy(prev => prev ?? members[0].id);
-            if (members.length > 1) {
-                setPaidTo(prev => prev ?? members[1].id);
+        if (initialSettlement) {
+            setPaidBy(initialSettlement.paidBy);
+            setPaidTo(initialSettlement.paidTo);
+            setTotalAmount(initialSettlement.amount);
+        } else {
+            // Default: first member as payer, second as recipient
+            if (members.length > 0) {
+                setPaidBy(prev => prev ?? members[0].id);
+                if (members.length > 1) {
+                    setPaidTo(prev => prev ?? members[1].id);
+                }
             }
         }
-    }, [members]);
+    }, [members, initialSettlement]);
 
     const handleClose = () => {
         setIsClosing(true);
@@ -62,28 +83,45 @@ const AddSettlementSheet: React.FC<AddSettlementSheetProps> = ({
             return;
         }
 
-        onAdd({
+        const settlementData = {
             paidBy,
             paidTo,
             amount: totalAmount,
-            date: new Date().toISOString(),
-        });
+            date: initialSettlement?.date || new Date().toISOString(),
+        };
+
+        if (initialSettlement && onUpdate) {
+            onUpdate({
+                ...settlementData,
+                id: initialSettlement.id,
+            });
+        } else if (onAdd) {
+            onAdd(settlementData);
+        }
 
         handleClose();
     };
 
+    const handleDelete = () => {
+        if (window.confirm('Are you sure you want to delete this settlement?')) {
+            onDelete?.();
+            handleClose();
+        }
+    };
+
     const getCurrentDateTime = () => {
-        const now = new Date();
+        const dateStr = initialSettlement?.date ? new Date(initialSettlement.date) : new Date();
         const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-        const day = days[now.getDay()];
-        const hours = now.getHours();
-        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const day = days[dateStr.getDay()];
+        const hours = dateStr.getHours();
+        const minutes = dateStr.getMinutes().toString().padStart(2, '0');
         const ampm = hours >= 12 ? 'PM' : 'AM';
         const hour12 = hours % 12 || 12;
         return `${day} ${hour12}:${minutes} ${ampm}`;
     };
 
     const canConfirm = paidBy && paidTo && paidBy !== paidTo && totalAmount > 0;
+    const isEditMode = !!initialSettlement;
 
     return (
         <>
@@ -120,7 +158,9 @@ const AddSettlementSheet: React.FC<AddSettlementSheetProps> = ({
 
                     {/* Title Row */}
                     <div className="px-6 pt-6 pb-2 flex justify-between items-center">
-                        <h2 className="text-label text-xs text-prowess-beige tracking-widest uppercase">NEW SETTLEMENT</h2>
+                        <h2 className="text-label text-xs text-prowess-beige tracking-widest uppercase">
+                            {isEditMode ? 'EDIT SETTLEMENT' : 'NEW SETTLEMENT'}
+                        </h2>
                         <span className="text-label text-xs text-prowess-grey tracking-widest">{getCurrentDateTime()}</span>
                     </div>
                 </div>
@@ -187,6 +227,19 @@ const AddSettlementSheet: React.FC<AddSettlementSheetProps> = ({
                             })}
                         </div>
                     </div>
+
+                    {/* Delete Button (Only in Edit Mode) */}
+                    {isEditMode && onDelete && (
+                        <div className="pt-4 px-0">
+                            <button
+                                onClick={handleDelete}
+                                className="w-full h-[50px] flex items-center justify-center bg-prowess-red text-prowess-beige text-label text-sm tracking-widest font-bold uppercase hover:brightness-90 transition-all"
+                            >
+                                DELETE SETTLEMENT
+                            </button>
+                        </div>
+                    )}
+
                     <div className="h-[300px]"></div>
                 </div>
 
@@ -217,7 +270,7 @@ const AddSettlementSheet: React.FC<AddSettlementSheetProps> = ({
                             disabled={!canConfirm}
                             className="w-full h-[42px] flex items-center justify-center bg-white text-black text-label text-sm tracking-widest font-bold uppercase disabled:bg-prowess-grey disabled:opacity-100 disabled:cursor-not-allowed hover:brightness-90 transition-all"
                         >
-                            CONFIRM
+                            {isEditMode ? 'UPDATE' : 'CONFIRM'}
                         </button>
                     </div>
                 </div>

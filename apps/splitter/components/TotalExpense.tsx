@@ -22,7 +22,9 @@ const TotalExpense: React.FC<TotalExpenseProps> = ({ members, expenses, currency
   const [fontSize, setFontSize] = useState<number | null>(null);
 
   const total = useMemo(() => {
-    return expenses.reduce((sum, exp) => sum + exp.amount, 0);
+    return expenses
+      .filter(exp => exp.category !== 'settlement')
+      .reduce((sum, exp) => sum + exp.amount, 0);
   }, [expenses]);
 
   const formatNumber = (num: number): string => {
@@ -38,7 +40,7 @@ const TotalExpense: React.FC<TotalExpenseProps> = ({ members, expenses, currency
 
       // Reset to measure at a known size
       measureRef.current.style.fontSize = '100px';
-      
+
       const containerWidth = containerRef.current.offsetWidth;
       const textWidth = measureRef.current.offsetWidth;
 
@@ -54,10 +56,10 @@ const TotalExpense: React.FC<TotalExpenseProps> = ({ members, expenses, currency
 
     // Run calculation after render
     const timer = requestAnimationFrame(calculateFontSize);
-    
+
     // Also recalculate on resize
     window.addEventListener('resize', calculateFontSize);
-    
+
     return () => {
       cancelAnimationFrame(timer);
       window.removeEventListener('resize', calculateFontSize);
@@ -69,12 +71,12 @@ const TotalExpense: React.FC<TotalExpenseProps> = ({ members, expenses, currency
   return (
     <div className="py-4">
       {/* Total Amount - Fills the same width as ContributionBar */}
-      <div 
+      <div
         ref={containerRef}
         className="px-4 mb-2 overflow-hidden"
       >
         {/* Hidden measurement span */}
-        <span 
+        <span
           ref={measureRef}
           className="text-display text-prowess-beige whitespace-nowrap absolute opacity-0 pointer-events-none"
           style={{ fontSize: '100px' }}
@@ -82,11 +84,11 @@ const TotalExpense: React.FC<TotalExpenseProps> = ({ members, expenses, currency
         >
           {formattedTotal}
         </span>
-        
+
         {/* Visible text with calculated font size */}
-        <span 
+        <span
           className="text-display text-prowess-beige whitespace-nowrap block text-center"
-          style={{ 
+          style={{
             fontSize: fontSize ? `${fontSize}px` : '100px',
             lineHeight: 1.1,
             opacity: fontSize ? 1 : 0, // Hide until calculated
@@ -99,9 +101,9 @@ const TotalExpense: React.FC<TotalExpenseProps> = ({ members, expenses, currency
 
       {/* Contribution Breakdown */}
       {hasContributions ? (
-        <ContributionBar 
-          members={members} 
-          expenses={expenses} 
+        <ContributionBar
+          members={members}
+          expenses={expenses}
           className="px-4"
         />
       ) : (

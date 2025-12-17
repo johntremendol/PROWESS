@@ -56,6 +56,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [showAddSettlement, setShowAddSettlement] = useState(false);
   const [showEditGroup, setShowEditGroup] = useState(false);
+  const [selectedSettlement, setSelectedSettlement] = useState<Settlement | null>(null);
 
   const settlements: Settlement[] = useMemo(() => {
     return group.expenses
@@ -82,6 +83,31 @@ const GroupDetail: React.FC<GroupDetailProps> = ({
     onAddSettlement?.(settlement);
   };
 
+  const handleUpdateSettlement = (updated: { id?: string; paidBy: string; paidTo: string; amount: number; date: string }) => {
+    if (!updated.id || !onUpdateExpense) return;
+
+    // Convert settlement update back to expense structure
+    const expense: Expense = {
+      id: updated.id,
+      description: 'Settlement',
+      amount: updated.amount,
+      paidBy: updated.paidBy,
+      splitBetween: [updated.paidTo],
+      category: 'settlement',
+      date: updated.date
+    };
+
+    onUpdateExpense(expense);
+    setSelectedSettlement(null);
+  };
+
+  const handleDeleteSettlement = () => {
+    if (selectedSettlement && onDeleteExpense) {
+      onDeleteExpense(selectedSettlement.id);
+      setSelectedSettlement(null);
+    }
+  };
+
   const tabs = [
     {
       id: 'settlements',
@@ -93,6 +119,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({
           currency={currency}
           settlements={settlements}
           onNewSettlement={() => setShowAddSettlement(true)}
+          onSettlementClick={setSelectedSettlement}
         />
       ),
     },
@@ -128,7 +155,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({
       <Header onBack={onBack} backLabel="GROUPS" />
 
       {/* Scrollable Content Area - Everything scrolls together */}
-      <div className={`flex-1 ${showAddExpense || showAddSettlement || showEditGroup || selectedExpense ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+      <div className={`flex-1 ${showAddExpense || showAddSettlement || showEditGroup || selectedExpense || selectedSettlement ? 'overflow-hidden' : 'overflow-y-auto'}`}>
         {/* Group Info - Label + Name on left, stacked avatars on right */}
         {/* Made clickable to trigger Edit Group */}
         <div
@@ -205,7 +232,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({
         />
       )}
 
-      {/* Add Settlement Sheet */}
+      {/* Add Settlement Sheet (Create Mode) */}
       {showAddSettlement && (
         <AddSettlementSheet
           members={group.members}
@@ -215,6 +242,18 @@ const GroupDetail: React.FC<GroupDetailProps> = ({
             setShowAddSettlement(false);
           }}
           onClose={() => setShowAddSettlement(false)}
+        />
+      )}
+
+      {/* Edit Settlement Sheet (Edit/Delete Mode) */}
+      {selectedSettlement && (
+        <AddSettlementSheet
+          members={group.members}
+          currency={currency}
+          initialSettlement={selectedSettlement}
+          onUpdate={handleUpdateSettlement}
+          onDelete={handleDeleteSettlement}
+          onClose={() => setSelectedSettlement(null)}
         />
       )}
 
