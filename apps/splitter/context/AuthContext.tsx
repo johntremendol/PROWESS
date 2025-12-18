@@ -7,6 +7,8 @@ interface AuthContextType {
     session: Session | null;
     loading: boolean;
     signInWithEmail: (email: string) => Promise<{ error: any }>;
+    signInWithPassword: (email: string, password: string) => Promise<{ error: any }>;
+    signUp: (email: string, password: string) => Promise<{ error: any }>;
     signOut: () => Promise<{ error: any }>;
 }
 
@@ -15,6 +17,8 @@ const AuthContext = createContext<AuthContextType>({
     session: null,
     loading: true,
     signInWithEmail: async () => ({ error: null }),
+    signInWithPassword: async () => ({ error: null }),
+    signUp: async () => ({ error: null }),
     signOut: async () => ({ error: null }),
 });
 
@@ -60,12 +64,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
     };
 
+    const signInWithPassword = async (email: string, password: string) => {
+        return await supabase.auth.signInWithPassword({
+            email,
+            password,
+        });
+    };
+
+    const signUp = async (email: string, password: string) => {
+        return await supabase.auth.signUp({
+            email,
+            password,
+        });
+    };
+
     const signOut = async () => {
         return await supabase.auth.signOut();
     };
 
     return (
-        <AuthContext.Provider value={{ user, session, loading, signInWithEmail, signOut }}>
+        <AuthContext.Provider value={{ user, session, loading, signInWithEmail, signInWithPassword, signUp, signOut }}>
             {children}
         </AuthContext.Provider>
     );
