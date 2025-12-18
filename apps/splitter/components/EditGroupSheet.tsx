@@ -5,7 +5,7 @@ import { Group } from '../../../types';
 
 interface EditGroupSheetProps {
     group: Group;
-    onUpdateGroup: (name: string, members: { id: string | null; name: string }[], currency: string) => void;
+    onUpdateGroup: (name: string, members: { id: string | null; name: string; email?: string }[], currency: string) => void;
     onClose: () => void;
 }
 
@@ -39,8 +39,8 @@ const EditGroupSheet: React.FC<EditGroupSheetProps> = ({ group, onUpdateGroup, o
     );
 
     // Mixed existing (has ID) and new (id=null for now) members
-    const [members, setMembers] = useState<{ id: string | null; name: string }[]>(
-        group.members.map(m => ({ id: m.id, name: m.name }))
+    const [members, setMembers] = useState<{ id: string | null; name: string; email?: string }[]>(
+        group.members.map(m => ({ id: m.id, name: m.name, email: m.email || undefined }))
     );
 
     const [memberName, setMemberName] = useState('');
@@ -268,12 +268,26 @@ const EditGroupSheet: React.FC<EditGroupSheetProps> = ({ group, onUpdateGroup, o
                                                 size="md"
                                                 variant="outline"
                                             />
-                                            <input
-                                                type="text"
-                                                value={member.name}
-                                                onChange={(e) => handleEditMemberName(index, e.target.value)}
-                                                className="bg-transparent text-display text-lg text-prowess-beige focus:outline-none border-b border-transparent focus:border-prowess-beige/50 w-full"
-                                            />
+                                            <div className="flex flex-col flex-1 gap-1">
+                                                <input
+                                                    type="text"
+                                                    value={member.name}
+                                                    onChange={(e) => handleEditMemberName(index, e.target.value)}
+                                                    placeholder="name"
+                                                    className="bg-transparent text-display text-lg text-prowess-beige focus:outline-none border-b border-transparent focus:border-prowess-beige/50 w-full"
+                                                />
+                                                <input
+                                                    type="email"
+                                                    value={member.email || ''}
+                                                    onChange={(e) => {
+                                                        const newMembers = [...members];
+                                                        newMembers[index] = { ...member, email: e.target.value };
+                                                        setMembers(newMembers);
+                                                    }}
+                                                    placeholder="add email to connect"
+                                                    className="bg-transparent text-label text-xs text-prowess-grey focus:outline-none border-b border-transparent focus:border-prowess-beige/30 w-full placeholder:text-prowess-grey/30"
+                                                />
+                                            </div>
                                         </div>
                                         {/* Only show trash if it's a new member or if we handle deletion properly */}
                                         {/* For now allowing deletion UI but backend might reject if expenses exist */}

@@ -268,7 +268,7 @@ const AddSettlementSheet: React.FC<AddSettlementSheetProps> = ({
                         <button
                             onClick={handleConfirm}
                             disabled={!canConfirm}
-                            className="w-full h-[42px] flex items-center justify-center bg-white text-black text-label text-sm tracking-widest font-bold uppercase disabled:bg-prowess-grey disabled:opacity-100 disabled:cursor-not-allowed hover:brightness-90 transition-all"
+                            className="w-full h-[42px] flex items-center justify-center bg-white text-black text-label text-sm tracking-widest font-bold uppercase disabled:bg-prowess-grey disabled:opacity-100 disabled:cursor-not-allowed hover:brightness-90 transition-all rounded-none"
                         >
                             {isEditMode ? 'UPDATE' : 'CONFIRM'}
                         </button>

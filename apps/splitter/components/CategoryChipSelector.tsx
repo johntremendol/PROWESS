@@ -41,6 +41,12 @@ const CategoryChipSelector: React.FC<CategoryChipSelectorProps> = ({
   const handleCreateSubmit = () => {
     if (newCategoryName.trim()) {
       const trimmed = newCategoryName.trim().toLowerCase();
+      if (trimmed === 'settlement') { // explicit block
+        setNewCategoryName('');
+        setIsCreating(false);
+        return;
+      }
+
       if (!allCategories.includes(trimmed)) {
         onCustomCategoryAdd(trimmed);
       } else {

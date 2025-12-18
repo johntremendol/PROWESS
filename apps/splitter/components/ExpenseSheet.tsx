@@ -352,7 +352,7 @@ const ExpenseSheet: React.FC<ExpenseSheetProps> = ({
                   onClose();
                 }
               }}
-              className="w-full h-[50px] flex items-center justify-center bg-prowess-red text-prowess-beige text-label text-sm tracking-widest font-bold uppercase hover:brightness-90 transition-all"
+              className="w-full h-[50px] flex items-center justify-center bg-prowess-red text-prowess-beige text-label text-sm tracking-widest font-bold uppercase hover:brightness-90 transition-all rounded-none"
             >
               delete expense
             </button>
@@ -394,7 +394,7 @@ const ExpenseSheet: React.FC<ExpenseSheetProps> = ({
             <button
               onClick={handleUpdate}
               disabled={!canUpdate}
-              className="w-full h-[42px] flex items-center justify-center bg-white text-black text-label text-sm tracking-widest font-bold uppercase disabled:bg-prowess-grey disabled:opacity-100 disabled:cursor-not-allowed hover:brightness-90 transition-all"
+              className="w-full h-[42px] flex items-center justify-center bg-white text-black text-label text-sm tracking-widest font-bold uppercase disabled:bg-prowess-grey disabled:opacity-100 disabled:cursor-not-allowed hover:brightness-90 transition-all rounded-none"
             >
               UPDATE
             </button>
