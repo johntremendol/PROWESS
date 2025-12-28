@@ -21,7 +21,7 @@ interface SplitterAppProps {
 type ViewState = 'GROUPS' | 'CREATE' | 'DETAILS';
 
 const SplitterInner: React.FC<SplitterAppProps> = ({ onBack }) => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, isRecovering } = useAuth();
   const [view, setView] = useState<ViewState>('GROUPS');
   const [showAccount, setShowAccount] = useState(false);
   const [groups, setGroups] = useState<Group[]>([]);
@@ -365,8 +365,6 @@ const SplitterInner: React.FC<SplitterAppProps> = ({ onBack }) => {
     await handleAddExpense(expensePayload);
   };
 
-  const isResetFlow = typeof window !== 'undefined' && window.location.hash.includes('type=recovery');
-
   if (authLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -375,7 +373,7 @@ const SplitterInner: React.FC<SplitterAppProps> = ({ onBack }) => {
     );
   }
 
-  if (!user || isResetFlow) {
+  if (!user || isRecovering) {
     return <LoginPage />;
   }
 

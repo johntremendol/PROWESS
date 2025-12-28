@@ -11,15 +11,19 @@ const LoginPage: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [view, setView] = useState<AuthView>('signin');
-    const { signInWithPassword, signUp, resetPassword, updatePassword } = useAuth();
+    const { signInWithPassword, signUp, resetPassword, updatePassword, isRecovering, setIsRecovering } = useAuth();
 
-    // Check if we're in password reset mode (from email link)
+    // Check if we're in password reset mode (from email link or auth event)
     useEffect(() => {
-        const hash = window.location.hash;
-        if (hash && hash.includes('type=recovery')) {
+        if (isRecovering) {
             setView('reset');
+        } else {
+            const hash = window.location.hash;
+            if (hash && hash.includes('type=recovery')) {
+                setView('reset');
+            }
         }
-    }, []);
+    }, [isRecovering]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -60,6 +64,7 @@ const LoginPage: React.FC = () => {
                     if (updateResult.error) throw updateResult.error;
                     setSuccess('Password updated successfully! You can now sign in.');
                     // Clear the hash and redirect to sign in
+                    setIsRecovering(false);
                     window.location.hash = '';
                     setTimeout(() => setView('signin'), 2000);
                     break;

@@ -6,6 +6,8 @@ interface AuthContextType {
     user: User | null;
     session: Session | null;
     loading: boolean;
+    isRecovering: boolean;
+    setIsRecovering: (value: boolean) => void;
     signInWithPassword: (email: string, password: string) => Promise<{ error: any }>;
     signUp: (email: string, password: string) => Promise<{ error: any }>;
     signOut: () => Promise<{ error: any }>;
@@ -17,6 +19,8 @@ const AuthContext = createContext<AuthContextType>({
     user: null,
     session: null,
     loading: true,
+    isRecovering: false,
+    setIsRecovering: () => { },
     signInWithPassword: async () => ({ error: null }),
     signUp: async () => ({ error: null }),
     signOut: async () => ({ error: null }),
@@ -28,8 +32,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [user, setUser] = useState<User | null>(null);
     const [session, setSession] = useState<Session | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isRecovering, setIsRecovering] = useState(false);
 
     useEffect(() => {
+        // Initial check for recovery hash in case onAuthStateChange already fired
+        if (typeof window !== 'undefined' && window.location.hash.includes('type=recovery')) {
+            setIsRecovering(true);
+        }
+
         // Check active session
         supabase.auth.getSession().then(({ data: { session } }) => {
             setSession(session);
@@ -41,7 +51,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const {
             data: { subscription },
             // @ts-ignore
-        } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
+        } = supabase.auth.onAuthStateChange((event: string, session: any) => {
+            console.log("Auth Event:", event);
+            if (event === 'PASSWORD_RECOVERY') {
+                setIsRecovering(true);
+            }
+
             setSession(session);
             setUser(session?.user ?? null);
             setLoading(false);
@@ -92,6 +107,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             user,
             session,
             loading,
+            isRecovering,
+            setIsRecovering,
             signInWithPassword,
             signUp,
             signOut,
