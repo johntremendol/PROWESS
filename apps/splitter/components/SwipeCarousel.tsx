@@ -1,4 +1,4 @@
-import { ReactNode, useRef } from 'react';
+import { ReactNode, useRef, useMemo } from 'react';
 import { useSwipeGesture } from '../hooks/useSwipeGesture';
 
 interface Tab {
@@ -13,57 +13,55 @@ interface SwipeCarouselProps {
 }
 
 /**
- * Swipe carousel with smooth tab navigation.
- * 
- * Tab Navigation:
- * - Tabs slide smoothly left/right with content
- * - Active tab is highlighted (bright), others are muted
- * - Right gradient fade implies scrollability
- * - Infinite scroll: user can keep swiping, wraps around seamlessly
- * 
- * Content:
- * - All content panels exist in DOM for smooth transitions
- * - Swipe gesture controls which panel is visible
+ * Enhanced Swipe carousel with continuous (infinite) flow.
+ * Handles the "cut off" issue by rendering clones and wrapping indices.
  */
 const SwipeCarousel: React.FC<SwipeCarouselProps> = ({ tabs, className = '' }) => {
   const { currentIndex, setCurrentIndex, bind, offset } = useSwipeGesture({
     totalItems: tabs.length,
   });
-  
+
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Calculate tab offset - tabs slide with content but stay more visible
-  // Don't slide as aggressively so active tab stays in view
-  const tabOffset = (() => {
-    const tabWidth = 160; // Approximate width per tab including gap
-    // Only slide partially - keep active tab visible near left
-    const baseOffset = currentIndex * tabWidth * 0.6; // 60% slide factor
-    // Add gesture offset for smooth dragging (scaled down for tabs)
-    const gestureOffset = offset * 0.2;
-    return -baseOffset + gestureOffset;
-  })();
+  // For 2 tabs, we create a centered layout where both are visible
+  // and they slide smoothly.
+  const tabWidth = 100; // Expected width per tab area
+
+  // Header animation logic
+  const headerTransform = useMemo(() => {
+    // If we have 2 tabs, we want to slide between them
+    // At index 0, SIGN UP is highlighted.
+    // At index 1, LOGIN is highlighted.
+    // The offset allows smooth dragging.
+    const baseOffset = currentIndex * 80; // 80px gap/slide
+    const dragOffset = offset * 0.3; // Dampened drag
+    return -baseOffset + dragOffset;
+  }, [currentIndex, offset]);
 
   return (
     <div className={`flex flex-col ${className}`}>
-      {/* Tab Navigation with gradient fade */}
-      <div className="relative mb-4">
-        {/* Tab container with overflow hidden */}
-        <div className="overflow-hidden px-4">
-          <div 
-            className="flex gap-8 transition-transform duration-300 ease-out"
-            style={{ 
-              transform: `translateX(${tabOffset}px)`,
+      {/* Tab Navigation */}
+      <div className="relative mb-2 px-6">
+        <div className="overflow-visible">
+          <div
+            className="flex gap-10 transition-transform duration-500 cubic-bezier(0.4, 0, 0.2, 1)"
+            style={{
+              transform: `translateX(${headerTransform}px)`,
             }}
           >
-            {tabs.map((tab, idx) => {
-              const isActive = idx === currentIndex;
+            {/* If we want "continuous flow", we render the tabs set twice to allow wrapping */}
+            {[...tabs, ...tabs].map((tab, idx) => {
+              const actualIdx = idx % tabs.length;
+              const isActive = actualIdx === currentIndex;
               return (
                 <button
-                  key={tab.id}
-                  onClick={() => setCurrentIndex(idx)}
-                  className="whitespace-nowrap flex-shrink-0 text-label text-xs transition-colors duration-200"
+                  key={`${tab.id}-${idx}`}
+                  onClick={() => setCurrentIndex(actualIdx)}
+                  className="whitespace-nowrap flex-shrink-0 text-label text-xs transition-all duration-300 tracking-[0.2em]"
                   style={{
-                    color: isActive ? '#D6CFBF' : 'rgba(154, 146, 135, 0.5)',
+                    color: isActive ? '#D6CFBF' : 'rgba(154, 146, 135, 0.3)',
+                    opacity: isActive ? 1 : 0.5,
+                    transform: isActive ? 'scale(1.05)' : 'scale(1)',
                   }}
                 >
                   {tab.label}
@@ -72,14 +70,6 @@ const SwipeCarousel: React.FC<SwipeCarouselProps> = ({ tabs, className = '' }) =
             })}
           </div>
         </div>
-        
-        {/* Right gradient fade to imply scrollability */}
-        <div 
-          className="absolute right-0 top-0 bottom-0 w-16 pointer-events-none"
-          style={{
-            background: 'linear-gradient(to right, transparent, black)',
-          }}
-        />
       </div>
 
       {/* Content Area - Swipeable */}
@@ -89,9 +79,9 @@ const SwipeCarousel: React.FC<SwipeCarouselProps> = ({ tabs, className = '' }) =
         className="overflow-hidden touch-pan-y"
         style={{ touchAction: 'pan-y' }}
       >
-        <div 
-          className="flex transition-transform duration-300 ease-out"
-          style={{ 
+        <div
+          className="flex transition-transform duration-500 cubic-bezier(0.4, 0, 0.2, 1)"
+          style={{
             width: `${tabs.length * 100}%`,
             transform: `translateX(calc(-${currentIndex * (100 / tabs.length)}% + ${offset}px))`,
           }}

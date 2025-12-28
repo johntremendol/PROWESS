@@ -1,5 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import SwipeCarousel from '../SwipeCarousel';
+import { Eye, EyeOff } from 'lucide-react';
+
+// Assets
+import splitterLogo from '../../../../src/assets/splitterlogo.png';
+const bannerPNG = '/assets/login_banner.png'; // Updated to the new banner
 
 type AuthView = 'signin' | 'signup' | 'forgot' | 'reset';
 
@@ -7,21 +13,18 @@ const LoginPage: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [view, setView] = useState<AuthView>('signin');
     const { signInWithPassword, signUp, resetPassword, updatePassword, isRecovering, setIsRecovering } = useAuth();
 
-    // Check if we're in password reset mode (from email link or auth event)
+    // Check if we're in password reset/invite mode
     useEffect(() => {
-        if (isRecovering) {
+        const hash = window.location.hash;
+        if (isRecovering || hash.includes('type=recovery') || hash.includes('type=invite')) {
             setView('reset');
-        } else {
-            const hash = window.location.hash;
-            if (hash && hash.includes('type=recovery')) {
-                setView('reset');
-            }
         }
     }, [isRecovering]);
 
@@ -49,21 +52,18 @@ const LoginPage: React.FC = () => {
                     if (!email) return;
                     const resetResult = await resetPassword(email);
                     if (resetResult.error) throw resetResult.error;
-                    setSuccess('Password reset link sent! Check your email.');
+                    setSuccess('Reset link sent! Check your email.');
                     break;
 
                 case 'reset':
                     if (!password || !confirmPassword) return;
-                    if (password !== confirmPassword) {
-                        throw new Error('Passwords do not match');
-                    }
-                    if (password.length < 6) {
-                        throw new Error('Password must be at least 6 characters');
-                    }
+                    if (password !== confirmPassword) throw new Error('Passwords do not match');
+                    if (password.length < 6) throw new Error('Password must be at least 6 characters');
+
                     const updateResult = await updatePassword(password);
                     if (updateResult.error) throw updateResult.error;
-                    setSuccess('Password updated successfully! You can now sign in.');
-                    // Clear the hash and redirect to sign in
+
+                    setSuccess('Success! Signing you in...');
                     setIsRecovering(false);
                     window.location.hash = '';
                     setTimeout(() => setView('signin'), 2000);
@@ -77,182 +77,247 @@ const LoginPage: React.FC = () => {
         }
     };
 
-    const switchView = (newView: AuthView) => {
-        setView(newView);
-        setError(null);
-        setSuccess(null);
-    };
-
-    return (
-        <div className="min-h-screen bg-black flex flex-col items-center justify-center p-8 relative overflow-hidden">
-            {/* Background decoration */}
-            <div className="absolute top-[-10%] right-[-10%] w-[400px] h-[400px] bg-prowess-red/10 rounded-full blur-[100px] pointer-events-none" />
-            <div className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] bg-blue-900/10 rounded-full blur-[100px] pointer-events-none" />
-
-            <div className="w-full max-w-md z-10">
-                {/* Header */}
-                <div className="mb-10 text-center">
-                    <h1 className="text-display text-5xl text-prowess-beige italic mb-2">PROWESS</h1>
-                    <p className="text-label text-xs text-prowess-grey tracking-[0.3em] uppercase">Expense Manager</p>
-                </div>
-
-                {/* Tab Toggle - Only show for signin/signup */}
-                {(view === 'signin' || view === 'signup') && (
-                    <div className="flex mb-8 border-b border-white/10">
-                        <button
-                            type="button"
-                            className={`flex-1 pb-4 text-center text-xs tracking-widest uppercase transition-colors ${view === 'signin' ? 'text-prowess-beige border-b-2 border-prowess-beige' : 'text-prowess-grey hover:text-white'}`}
-                            onClick={() => switchView('signin')}
-                        >
-                            Sign In
-                        </button>
-                        <button
-                            type="button"
-                            className={`flex-1 pb-4 text-center text-xs tracking-widest uppercase transition-colors ${view === 'signup' ? 'text-prowess-beige border-b-2 border-prowess-beige' : 'text-prowess-grey hover:text-white'}`}
-                            onClick={() => switchView('signup')}
-                        >
-                            Create Account
-                        </button>
+    // Tabs for SwipeCarousel
+    const tabs = [
+        {
+            id: 'signup',
+            label: 'SIGN UP',
+            content: (
+                <form onSubmit={handleSubmit} className="space-y-12 px-6 py-12">
+                    <div className="flex justify-between items-end border-b border-prowess-red pb-2 hover:border-white transition-colors group">
+                        <label className="text-label text-[10px] text-prowess-grey tracking-[0.34em] pb-1 uppercase">EMAIL</label>
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="placeholder@aa.co"
+                            className="bg-transparent text-right text-display text-4xl text-prowess-beige italic focus:outline-none placeholder:text-prowess-grey/20 flex-1 ml-4"
+                            required
+                        />
                     </div>
-                )}
-
-                {/* Forgot Password Header */}
-                {view === 'forgot' && (
-                    <div className="mb-8">
-                        <h2 className="text-display text-2xl text-prowess-beige italic mb-2">Reset Password</h2>
-                        <p className="text-prowess-grey text-xs">Enter your email to receive a reset link</p>
+                    <div className="flex justify-between items-end border-b border-prowess-red pb-2 hover:border-white transition-colors group">
+                        <div className="flex items-center gap-2 pb-1">
+                            <label className="text-label text-[10px] text-prowess-grey tracking-[0.34em] uppercase">CREATE KEY</label>
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="text-prowess-grey opacity-50 hover:opacity-100 transition-opacity"
+                            >
+                                {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                            </button>
+                        </div>
+                        <input
+                            type={showPassword ? "text" : "password"}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="0000000"
+                            className="bg-transparent text-right text-display text-4xl text-prowess-grey focus:outline-none placeholder:text-prowess-grey/20 flex-1 ml-4"
+                            required
+                            minLength={6}
+                        />
                     </div>
-                )}
-
-                {/* Reset Password Header */}
-                {view === 'reset' && (
-                    <div className="mb-8">
-                        <h2 className="text-display text-2xl text-prowess-beige italic mb-2">New Password</h2>
-                        <p className="text-prowess-grey text-xs">Choose a new password for your account</p>
-                    </div>
-                )}
-
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Email - show for signin, signup, forgot */}
-                    {(view === 'signin' || view === 'signup' || view === 'forgot') && (
-                        <div className="space-y-2">
-                            <label htmlFor="email" className="text-label text-xs text-prowess-grey ml-1 block">EMAIL ADDRESS</label>
-                            <input
-                                id="email"
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                placeholder="name@example.com"
-                                className="w-full bg-white/5 border border-white/10 rounded-none px-4 py-4 text-prowess-beige text-lg placeholder:text-white/20 focus:outline-none focus:border-prowess-beige/50 transition-colors"
-                                required
-                            />
-                        </div>
-                    )}
-
-                    {/* Password - show for signin, signup, reset */}
-                    {(view === 'signin' || view === 'signup' || view === 'reset') && (
-                        <div className="space-y-2">
-                            <label htmlFor="password" className="text-label text-xs text-prowess-grey ml-1 block">
-                                {view === 'reset' ? 'NEW PASSWORD' : 'PASSWORD'}
-                            </label>
-                            <input
-                                id="password"
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                placeholder="••••••••"
-                                className="w-full bg-white/5 border border-white/10 rounded-none px-4 py-4 text-prowess-beige text-lg placeholder:text-white/20 focus:outline-none focus:border-prowess-beige/50 transition-colors"
-                                required
-                                minLength={6}
-                            />
-                            {(view === 'signup' || view === 'reset') && (
-                                <p className="text-prowess-grey/50 text-[10px] ml-1">Minimum 6 characters</p>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Confirm Password - show for reset only */}
-                    {view === 'reset' && (
-                        <div className="space-y-2">
-                            <label htmlFor="confirmPassword" className="text-label text-xs text-prowess-grey ml-1 block">CONFIRM PASSWORD</label>
-                            <input
-                                id="confirmPassword"
-                                type="password"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                placeholder="••••••••"
-                                className="w-full bg-white/5 border border-white/10 rounded-none px-4 py-4 text-prowess-beige text-lg placeholder:text-white/20 focus:outline-none focus:border-prowess-beige/50 transition-colors"
-                                required
-                                minLength={6}
-                            />
-                        </div>
-                    )}
-
-                    {/* Error Message */}
-                    {error && (
-                        <div className="p-3 bg-red-900/20 border border-red-900/50">
-                            <p className="text-red-400 text-xs text-center">{error}</p>
-                        </div>
-                    )}
-
-                    {/* Success Message */}
-                    {success && (
-                        <div className="p-3 bg-green-900/20 border border-green-900/50">
-                            <p className="text-green-400 text-xs text-center">{success}</p>
-                        </div>
-                    )}
-
-                    {/* Submit Button */}
+                    {error && <p className="text-red-500 text-xs italic text-center">{error}</p>}
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-prowess-beige text-black py-4 rounded-none text-label text-sm font-bold tracking-widest uppercase hover:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="btn-primary w-full mt-8 font-bold tracking-[0.2em] py-5 text-sm"
                     >
-                        {loading
-                            ? 'Processing...'
-                            : view === 'signin'
-                                ? 'Sign In'
-                                : view === 'signup'
-                                    ? 'Create Account'
-                                    : view === 'forgot'
-                                        ? 'Send Reset Link'
-                                        : 'Update Password'}
+                        {loading ? 'PROCESSING...' : 'CREATE ACCOUNT'}
                     </button>
+                    <div className="pt-8 text-left">
+                        <button
+                            type="button"
+                            onClick={() => setView('forgot')}
+                            className="text-label text-[16px] text-prowess-grey tracking-[0.14em] normal-case hover:text-prowess-beige transition-colors lowercase"
+                            style={{ textTransform: 'lowercase' }}
+                        >
+                            regain access ?
+                        </button>
+                    </div>
                 </form>
-
-                {/* Forgot Password Link - show for signin only */}
-                {view === 'signin' && (
-                    <div className="mt-4 text-center">
+            )
+        },
+        {
+            id: 'signin',
+            label: 'LOGIN',
+            content: (
+                <form onSubmit={handleSubmit} className="space-y-12 px-6 py-12">
+                    <div className="flex justify-between items-end border-b border-prowess-red pb-2 hover:border-white transition-colors group">
+                        <label className="text-label text-[10px] text-prowess-grey tracking-[0.34em] pb-1 uppercase">EMAIL</label>
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="placeholder@aa.co"
+                            className="bg-transparent text-right text-display text-4xl text-prowess-beige italic focus:outline-none placeholder:text-prowess-grey/20 flex-1 ml-4"
+                            required
+                        />
+                    </div>
+                    <div className="flex justify-between items-end border-b border-prowess-red pb-2 hover:border-white transition-colors group">
+                        <div className="flex items-center gap-2 pb-1">
+                            <label className="text-label text-[10px] text-prowess-grey tracking-[0.34em] uppercase">KEY</label>
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="text-prowess-grey opacity-50 hover:opacity-100 transition-opacity"
+                            >
+                                {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                            </button>
+                        </div>
+                        <input
+                            type={showPassword ? "text" : "password"}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="0000000"
+                            className="bg-transparent text-right text-display text-4xl text-prowess-grey focus:outline-none placeholder:text-prowess-grey/20 flex-1 ml-4"
+                            required
+                        />
+                    </div>
+                    {error && <p className="text-red-500 text-xs italic text-center">{error}</p>}
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="btn-primary w-full mt-8 font-bold tracking-[0.2em] py-5 text-sm"
+                    >
+                        {loading ? 'PROCESSING...' : 'ENTER APP'}
+                    </button>
+                    <div className="pt-8 text-left">
                         <button
                             type="button"
-                            onClick={() => switchView('forgot')}
-                            className="text-prowess-grey text-xs hover:text-white transition-colors uppercase tracking-wider"
+                            onClick={() => setView('forgot')}
+                            className="text-label text-[16px] text-prowess-grey tracking-[0.14em] normal-case hover:text-prowess-beige transition-colors lowercase font-['Optician_Sans']"
+                            style={{ textTransform: 'lowercase' }}
                         >
-                            Forgot Password?
+                            regain access ?
                         </button>
                     </div>
-                )}
+                </form>
+            )
+        }
+    ];
 
-                {/* Back to Sign In - show for forgot and reset */}
-                {(view === 'forgot' || view === 'reset') && (
-                    <div className="mt-4 text-center">
-                        <button
-                            type="button"
-                            onClick={() => switchView('signin')}
-                            className="text-prowess-grey text-xs hover:text-white transition-colors uppercase tracking-wider"
-                        >
-                            ← Back to Sign In
-                        </button>
+    // Special view for Reset Password (Invite/Recovery)
+    if (view === 'reset') {
+        const isInvite = window.location.hash.includes('type=invite');
+        return (
+            <div className="min-h-screen bg-black flex flex-col items-center">
+                <div className="w-full h-[302px] relative overflow-hidden">
+                    <img src={bannerPNG} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <img src={splitterLogo} alt="S" className="h-[210px] object-contain" />
                     </div>
-                )}
-
-                {/* Footer */}
-                <div className="mt-8 text-center">
-                    <p className="text-white/20 text-[10px] uppercase tracking-widest">
-                        Secure Authentication
-                    </p>
                 </div>
+
+                <div className="w-full max-w-md px-6 py-12 space-y-8 animate-fade-in text-center">
+                    <div>
+                        <h2 className="text-display text-3xl text-prowess-beige italic mb-2">
+                            {isInvite ? 'Join Group' : 'New Key'}
+                        </h2>
+                        <p className="text-prowess-grey text-xs uppercase tracking-[0.2em]">
+                            {isInvite ? 'Set a password to enter' : 'Reset your access key'}
+                        </p>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="space-y-12 text-left px-4">
+                        <div className="flex justify-between items-end border-b border-prowess-red pb-2 hover:border-white transition-colors group">
+                            <label className="text-label text-[10px] text-prowess-grey tracking-[0.34em] pb-1 uppercase">NEW KEY</label>
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="bg-transparent text-right text-display text-4xl text-prowess-beige focus:outline-none flex-1 ml-4"
+                                required
+                                minLength={6}
+                            />
+                        </div>
+                        <div className="flex justify-between items-end border-b border-prowess-red pb-2 hover:border-white transition-colors group">
+                            <label className="text-label text-[10px] text-prowess-grey tracking-[0.34em] pb-1 uppercase">CONFIRM</label>
+                            <input
+                                type="password"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                className="bg-transparent text-right text-display text-4xl text-prowess-beige focus:outline-none flex-1 ml-4"
+                                required
+                            />
+                        </div>
+                        {error && <p className="text-red-500 text-xs italic text-center">{error}</p>}
+                        {success && <p className="text-green-500 text-xs italic text-center">{success}</p>}
+                        <button type="submit" disabled={loading} className="btn-primary w-full mt-4 font-bold tracking-[0.2em] py-5">
+                            {loading ? 'SAVING...' : isInvite ? 'SET KEY & JOIN' : 'UPDATE KEY'}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        );
+    }
+
+    // Special view for Forgot Password
+    if (view === 'forgot') {
+        return (
+            <div className="min-h-screen bg-black flex flex-col items-center justify-center px-6">
+                <div className="w-full max-w-md space-y-12 animate-fade-in text-center">
+                    <div>
+                        <h2 className="text-display text-4xl text-prowess-beige italic mb-4">Regain Access</h2>
+                        <p className="text-prowess-grey text-xs uppercase tracking-[0.2em]">Recovery link will be sent</p>
+                    </div>
+                    <form onSubmit={handleSubmit} className="space-y-12 text-left">
+                        <div className="flex justify-between items-end border-b border-prowess-red pb-2 hover:border-white transition-colors group">
+                            <label className="text-label text-[10px] text-prowess-grey tracking-[0.34em] pb-1 uppercase">EMAIL</label>
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="placeholder@aa.co"
+                                className="bg-transparent text-right text-display text-4xl text-prowess-beige italic focus:outline-none placeholder:text-prowess-grey/20 flex-1 ml-4"
+                                required
+                            />
+                        </div>
+                        {error && <p className="text-red-500 text-xs italic text-center">{error}</p>}
+                        {success && <p className="text-green-500 text-xs italic text-center">{success}</p>}
+                        <button type="submit" disabled={loading} className="btn-primary w-full font-bold tracking-[0.2em] py-5">
+                            {loading ? 'SENDING...' : 'SEND LINK'}
+                        </button>
+                        <button type="button" onClick={() => setView('signin')} className="text-label text-[16px] text-prowess-grey hover:text-white block mx-auto pt-8 normal-case lowercase" style={{ textTransform: 'lowercase' }}>
+                            ← back to login
+                        </button>
+                    </form>
+                </div>
+            </div>
+        );
+    }
+
+    // Main View
+    return (
+        <div className="min-h-screen bg-black flex flex-col items-center p-0">
+            {/* Header / Branding */}
+            <div className="w-full h-[302px] relative overflow-hidden">
+                <img
+                    src={bannerPNG}
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover"
+                />
+                {/* Red Rectangle Texture Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black" />
+
+                {/* Stylized Logo */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <img
+                        src={splitterLogo}
+                        alt="S"
+                        className="h-[210px] object-contain"
+                    />
+                </div>
+            </div>
+
+            {/* Draggable Switcher Area */}
+            <div className="w-full max-w-md flex-1 flex flex-col pt-8">
+                <SwipeCarousel tabs={tabs} className="flex-1" />
+            </div>
+
+            {/* Footer */}
+            <div className="pb-12 text-center opacity-20">
+                <p className="text-label text-[10px] tracking-[0.4em]">PROWESS SECURE</p>
             </div>
         </div>
     );
