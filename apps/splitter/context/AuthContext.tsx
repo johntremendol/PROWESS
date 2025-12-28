@@ -6,20 +6,22 @@ interface AuthContextType {
     user: User | null;
     session: Session | null;
     loading: boolean;
-    signInWithEmail: (email: string) => Promise<{ error: any }>;
     signInWithPassword: (email: string, password: string) => Promise<{ error: any }>;
     signUp: (email: string, password: string) => Promise<{ error: any }>;
     signOut: () => Promise<{ error: any }>;
+    resetPassword: (email: string) => Promise<{ error: any }>;
+    updatePassword: (newPassword: string) => Promise<{ error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType>({
     user: null,
     session: null,
     loading: true,
-    signInWithEmail: async () => ({ error: null }),
     signInWithPassword: async () => ({ error: null }),
     signUp: async () => ({ error: null }),
     signOut: async () => ({ error: null }),
+    resetPassword: async () => ({ error: null }),
+    updatePassword: async () => ({ error: null }),
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -48,22 +50,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return () => subscription.unsubscribe();
     }, []);
 
-    const signInWithEmail = async (email: string) => {
-        // Magic link login
-        // Redirect to the current URL after login, but force production URL if not localhost
-        let redirectTo = typeof window !== 'undefined' ? window.location.origin : undefined;
-        if (redirectTo && !redirectTo.includes('localhost')) {
-            redirectTo = 'https://prowess-two.vercel.app/';
-        }
-
-        return await supabase.auth.signInWithOtp({
-            email,
-            options: {
-                emailRedirectTo: redirectTo,
-            },
-        });
-    };
-
     const signInWithPassword = async (email: string, password: string) => {
         return await supabase.auth.signInWithPassword({
             email,
@@ -72,6 +58,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const signUp = async (email: string, password: string) => {
+        // Sign up - email confirmation is controlled by Supabase Dashboard settings
         return await supabase.auth.signUp({
             email,
             password,
@@ -82,8 +69,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return await supabase.auth.signOut();
     };
 
+    const resetPassword = async (email: string) => {
+        // Get redirect URL - use production URL if not localhost
+        let redirectTo = typeof window !== 'undefined' ? window.location.origin : undefined;
+        if (redirectTo && !redirectTo.includes('localhost')) {
+            redirectTo = 'https://prowess-two.vercel.app/';
+        }
+
+        return await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: redirectTo,
+        });
+    };
+
+    const updatePassword = async (newPassword: string) => {
+        return await supabase.auth.updateUser({
+            password: newPassword,
+        });
+    };
+
     return (
-        <AuthContext.Provider value={{ user, session, loading, signInWithEmail, signInWithPassword, signUp, signOut }}>
+        <AuthContext.Provider value={{
+            user,
+            session,
+            loading,
+            signInWithPassword,
+            signUp,
+            signOut,
+            resetPassword,
+            updatePassword,
+        }}>
             {children}
         </AuthContext.Provider>
     );

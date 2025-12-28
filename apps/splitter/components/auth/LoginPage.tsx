@@ -1,116 +1,156 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 
+type AuthView = 'signin' | 'signup' | 'forgot' | 'reset';
 
 const LoginPage: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    const [sent, setSent] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [authMethod, setAuthMethod] = useState<'magic' | 'password'>('magic');
-    const [isSignUp, setIsSignUp] = useState(false);
-    const { signInWithEmail, signInWithPassword, signUp } = useAuth();
+    const [success, setSuccess] = useState<string | null>(null);
+    const [view, setView] = useState<AuthView>('signin');
+    const { signInWithPassword, signUp, resetPassword, updatePassword } = useAuth();
 
-    const handleLogin = async (e: React.FormEvent) => {
+    // Check if we're in password reset mode (from email link)
+    useEffect(() => {
+        const hash = window.location.hash;
+        if (hash && hash.includes('type=recovery')) {
+            setView('reset');
+        }
+    }, []);
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!email) return;
-        if (authMethod === 'password' && !password) return;
-
         setLoading(true);
         setError(null);
+        setSuccess(null);
 
         try {
-            if (authMethod === 'magic') {
-                const { error } = await signInWithEmail(email);
-                if (error) throw error;
-                setSent(true);
-            } else {
-                if (isSignUp) {
-                    const { error } = await signUp(email, password);
-                    if (error) throw error;
-                    setSent(true);
-                } else {
-                    const { error } = await signInWithPassword(email, password);
-                    if (error) throw error;
-                }
+            switch (view) {
+                case 'signin':
+                    if (!email || !password) return;
+                    const signInResult = await signInWithPassword(email, password);
+                    if (signInResult.error) throw signInResult.error;
+                    break;
+
+                case 'signup':
+                    if (!email || !password) return;
+                    const signUpResult = await signUp(email, password);
+                    if (signUpResult.error) throw signUpResult.error;
+                    break;
+
+                case 'forgot':
+                    if (!email) return;
+                    const resetResult = await resetPassword(email);
+                    if (resetResult.error) throw resetResult.error;
+                    setSuccess('Password reset link sent! Check your email.');
+                    break;
+
+                case 'reset':
+                    if (!password || !confirmPassword) return;
+                    if (password !== confirmPassword) {
+                        throw new Error('Passwords do not match');
+                    }
+                    if (password.length < 6) {
+                        throw new Error('Password must be at least 6 characters');
+                    }
+                    const updateResult = await updatePassword(password);
+                    if (updateResult.error) throw updateResult.error;
+                    setSuccess('Password updated successfully! You can now sign in.');
+                    // Clear the hash and redirect to sign in
+                    window.location.hash = '';
+                    setTimeout(() => setView('signin'), 2000);
+                    break;
             }
         } catch (err: any) {
-            console.error('Login error:', err);
+            console.error('Auth error:', err);
             setError(err.message || 'Authentication failed');
         } finally {
             setLoading(false);
         }
     };
 
-    if (sent) {
-        return (
-            <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center">
-                <div className="w-16 h-16 rounded-full border border-prowess-beige mb-6 flex items-center justify-center text-prowess-beige text-2xl animate-pulse">
-                    ✉️
-                </div>
-                <h1 className="text-display text-3xl text-prowess-beige italic mb-4">Check your email</h1>
-                <p className="text-label text-sm text-prowess-grey max-w-xs mx-auto">
-                    {authMethod === 'magic' ? (
-                        <>We've sent a magic link to <span className="text-white">{email}</span>. Click it to log in.</>
-                    ) : (
-                        <>We've sent a confirmation email to <span className="text-white">{email}</span>. Please verify your account.</>
-                    )}
-                </p>
-                <button
-                    onClick={() => setSent(false)}
-                    className="mt-8 text-label text-xs text-prowess-red hover:text-white transition-colors uppercase tracking-widest rounded-none"
-                >
-                    Try a different email
-                </button>
-            </div>
-        );
-    }
+    const switchView = (newView: AuthView) => {
+        setView(newView);
+        setError(null);
+        setSuccess(null);
+    };
 
     return (
         <div className="min-h-screen bg-black flex flex-col items-center justify-center p-8 relative overflow-hidden">
             {/* Background decoration */}
-            <div className="absolute top-[-10%] right-[-10%] w-[300px] h-[300px] bg-prowess-red/10 rounded-full blur-[100px] pointer-events-none" />
-            <div className="absolute bottom-[-10%] left-[-10%] w-[300px] h-[300px] bg-blue-900/10 rounded-full blur-[100px] pointer-events-none" />
+            <div className="absolute top-[-10%] right-[-10%] w-[400px] h-[400px] bg-prowess-red/10 rounded-full blur-[100px] pointer-events-none" />
+            <div className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] bg-blue-900/10 rounded-full blur-[100px] pointer-events-none" />
 
             <div className="w-full max-w-md z-10">
-                <div className="mb-8 text-center">
+                {/* Header */}
+                <div className="mb-10 text-center">
                     <h1 className="text-display text-5xl text-prowess-beige italic mb-2">PROWESS</h1>
                     <p className="text-label text-xs text-prowess-grey tracking-[0.3em] uppercase">Expense Manager</p>
                 </div>
 
-                <div className="flex mb-8 border-b border-white/10">
-                    <button
-                        className={`flex-1 pb-4 text-center text-xs tracking-widest uppercase transition-colors ${authMethod === 'magic' ? 'text-prowess-beige border-b border-prowess-beige' : 'text-prowess-grey hover:text-white'}`}
-                        onClick={() => setAuthMethod('magic')}
-                    >
-                        Magic Link
-                    </button>
-                    <button
-                        className={`flex-1 pb-4 text-center text-xs tracking-widest uppercase transition-colors ${authMethod === 'password' ? 'text-prowess-beige border-b border-prowess-beige' : 'text-prowess-grey hover:text-white'}`}
-                        onClick={() => setAuthMethod('password')}
-                    >
-                        Password
-                    </button>
-                </div>
-
-                <form onSubmit={handleLogin} className="space-y-6">
-                    <div className="space-y-2">
-                        <label htmlFor="email" className="text-label text-xs text-prowess-grey ml-1 block">EMAIL ADDRESS</label>
-                        <input
-                            id="email"
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="name@example.com"
-                            className="w-full bg-white/5 border border-white/10 rounded-none px-4 py-4 text-prowess-beige text-lg placeholder:text-white/20 focus:outline-none focus:border-prowess-beige/50 transition-colors"
-                            required
-                        />
+                {/* Tab Toggle - Only show for signin/signup */}
+                {(view === 'signin' || view === 'signup') && (
+                    <div className="flex mb-8 border-b border-white/10">
+                        <button
+                            type="button"
+                            className={`flex-1 pb-4 text-center text-xs tracking-widest uppercase transition-colors ${view === 'signin' ? 'text-prowess-beige border-b-2 border-prowess-beige' : 'text-prowess-grey hover:text-white'}`}
+                            onClick={() => switchView('signin')}
+                        >
+                            Sign In
+                        </button>
+                        <button
+                            type="button"
+                            className={`flex-1 pb-4 text-center text-xs tracking-widest uppercase transition-colors ${view === 'signup' ? 'text-prowess-beige border-b-2 border-prowess-beige' : 'text-prowess-grey hover:text-white'}`}
+                            onClick={() => switchView('signup')}
+                        >
+                            Create Account
+                        </button>
                     </div>
+                )}
 
-                    {authMethod === 'password' && (
+                {/* Forgot Password Header */}
+                {view === 'forgot' && (
+                    <div className="mb-8">
+                        <h2 className="text-display text-2xl text-prowess-beige italic mb-2">Reset Password</h2>
+                        <p className="text-prowess-grey text-xs">Enter your email to receive a reset link</p>
+                    </div>
+                )}
+
+                {/* Reset Password Header */}
+                {view === 'reset' && (
+                    <div className="mb-8">
+                        <h2 className="text-display text-2xl text-prowess-beige italic mb-2">New Password</h2>
+                        <p className="text-prowess-grey text-xs">Choose a new password for your account</p>
+                    </div>
+                )}
+
+                {/* Form */}
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Email - show for signin, signup, forgot */}
+                    {(view === 'signin' || view === 'signup' || view === 'forgot') && (
                         <div className="space-y-2">
-                            <label htmlFor="password" className="text-label text-xs text-prowess-grey ml-1 block">PASSWORD</label>
+                            <label htmlFor="email" className="text-label text-xs text-prowess-grey ml-1 block">EMAIL ADDRESS</label>
+                            <input
+                                id="email"
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="name@example.com"
+                                className="w-full bg-white/5 border border-white/10 rounded-none px-4 py-4 text-prowess-beige text-lg placeholder:text-white/20 focus:outline-none focus:border-prowess-beige/50 transition-colors"
+                                required
+                            />
+                        </div>
+                    )}
+
+                    {/* Password - show for signin, signup, reset */}
+                    {(view === 'signin' || view === 'signup' || view === 'reset') && (
+                        <div className="space-y-2">
+                            <label htmlFor="password" className="text-label text-xs text-prowess-grey ml-1 block">
+                                {view === 'reset' ? 'NEW PASSWORD' : 'PASSWORD'}
+                            </label>
                             <input
                                 id="password"
                                 type="password"
@@ -119,16 +159,46 @@ const LoginPage: React.FC = () => {
                                 placeholder="••••••••"
                                 className="w-full bg-white/5 border border-white/10 rounded-none px-4 py-4 text-prowess-beige text-lg placeholder:text-white/20 focus:outline-none focus:border-prowess-beige/50 transition-colors"
                                 required
+                                minLength={6}
+                            />
+                            {(view === 'signup' || view === 'reset') && (
+                                <p className="text-prowess-grey/50 text-[10px] ml-1">Minimum 6 characters</p>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Confirm Password - show for reset only */}
+                    {view === 'reset' && (
+                        <div className="space-y-2">
+                            <label htmlFor="confirmPassword" className="text-label text-xs text-prowess-grey ml-1 block">CONFIRM PASSWORD</label>
+                            <input
+                                id="confirmPassword"
+                                type="password"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                placeholder="••••••••"
+                                className="w-full bg-white/5 border border-white/10 rounded-none px-4 py-4 text-prowess-beige text-lg placeholder:text-white/20 focus:outline-none focus:border-prowess-beige/50 transition-colors"
+                                required
+                                minLength={6}
                             />
                         </div>
                     )}
 
+                    {/* Error Message */}
                     {error && (
-                        <div className="p-3 bg-red-900/20 border border-red-900/50 rounded-lg">
+                        <div className="p-3 bg-red-900/20 border border-red-900/50">
                             <p className="text-red-400 text-xs text-center">{error}</p>
                         </div>
                     )}
 
+                    {/* Success Message */}
+                    {success && (
+                        <div className="p-3 bg-green-900/20 border border-green-900/50">
+                            <p className="text-green-400 text-xs text-center">{success}</p>
+                        </div>
+                    )}
+
+                    {/* Submit Button */}
                     <button
                         type="submit"
                         disabled={loading}
@@ -136,28 +206,46 @@ const LoginPage: React.FC = () => {
                     >
                         {loading
                             ? 'Processing...'
-                            : authMethod === 'magic'
-                                ? 'Send Magic Link'
-                                : isSignUp
+                            : view === 'signin'
+                                ? 'Sign In'
+                                : view === 'signup'
                                     ? 'Create Account'
-                                    : 'Sign In'}
+                                    : view === 'forgot'
+                                        ? 'Send Reset Link'
+                                        : 'Update Password'}
                     </button>
                 </form>
 
-                {authMethod === 'password' && (
+                {/* Forgot Password Link - show for signin only */}
+                {view === 'signin' && (
                     <div className="mt-4 text-center">
                         <button
-                            onClick={() => setIsSignUp(!isSignUp)}
+                            type="button"
+                            onClick={() => switchView('forgot')}
                             className="text-prowess-grey text-xs hover:text-white transition-colors uppercase tracking-wider"
                         >
-                            {isSignUp ? 'Already have an account? Sign In' : 'Need an account? Create Password'}
+                            Forgot Password?
                         </button>
                     </div>
                 )}
 
+                {/* Back to Sign In - show for forgot and reset */}
+                {(view === 'forgot' || view === 'reset') && (
+                    <div className="mt-4 text-center">
+                        <button
+                            type="button"
+                            onClick={() => switchView('signin')}
+                            className="text-prowess-grey text-xs hover:text-white transition-colors uppercase tracking-wider"
+                        >
+                            ← Back to Sign In
+                        </button>
+                    </div>
+                )}
+
+                {/* Footer */}
                 <div className="mt-8 text-center">
                     <p className="text-white/20 text-[10px] uppercase tracking-widest">
-                        Protected by Supabase Auth
+                        Secure Authentication
                     </p>
                 </div>
             </div>
