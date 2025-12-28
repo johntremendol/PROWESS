@@ -23,10 +23,6 @@ const SwipeCarousel: React.FC<SwipeCarouselProps> = ({ tabs, className = '' }) =
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // For 2 tabs, we create a centered layout where both are visible
-  // and they slide smoothly.
-  const tabWidth = 100; // Expected width per tab area
-
   // Header animation logic
   const headerTransform = useMemo(() => {
     // If we have 2 tabs, we want to slide between them
