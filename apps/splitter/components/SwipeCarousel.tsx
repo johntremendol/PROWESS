@@ -13,8 +13,7 @@ interface SwipeCarouselProps {
 }
 
 /**
- * Enhanced Swipe carousel with continuous (infinite) flow.
- * Handles the "cut off" issue by rendering clones and wrapping indices.
+ * Swipe carousel with smooth tab navigation.
  */
 const SwipeCarousel: React.FC<SwipeCarouselProps> = ({ tabs, className = '' }) => {
   const { currentIndex, setCurrentIndex, bind, offset } = useSwipeGesture({
@@ -23,41 +22,33 @@ const SwipeCarousel: React.FC<SwipeCarouselProps> = ({ tabs, className = '' }) =
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Header animation logic
+  // Header animation logic - simple slide for 2 tabs
   const headerTransform = useMemo(() => {
-    // If we have 2 tabs, we want to slide between them
-    // At index 0, SIGN UP is highlighted.
-    // At index 1, LOGIN is highlighted.
-    // The offset allows smooth dragging.
-    const baseOffset = currentIndex * 80; // 80px gap/slide
-    const dragOffset = offset * 0.3; // Dampened drag
+    const baseOffset = currentIndex * 100; // Slide amount
+    const dragOffset = offset * 0.2; // Dampened drag feedback
     return -baseOffset + dragOffset;
   }, [currentIndex, offset]);
 
   return (
     <div className={`flex flex-col ${className}`}>
       {/* Tab Navigation */}
-      <div className="relative mb-2 px-6">
+      <div className="relative mb-6 px-6">
         <div className="overflow-visible">
           <div
-            className="flex gap-10 transition-transform duration-500 cubic-bezier(0.4, 0, 0.2, 1)"
+            className="flex gap-12 transition-transform duration-300 ease-out"
             style={{
               transform: `translateX(${headerTransform}px)`,
             }}
           >
-            {/* If we want "continuous flow", we render the tabs set twice to allow wrapping */}
-            {[...tabs, ...tabs].map((tab, idx) => {
-              const actualIdx = idx % tabs.length;
-              const isActive = actualIdx === currentIndex;
+            {tabs.map((tab, idx) => {
+              const isActive = idx === currentIndex;
               return (
                 <button
-                  key={`${tab.id}-${idx}`}
-                  onClick={() => setCurrentIndex(actualIdx)}
-                  className="whitespace-nowrap flex-shrink-0 text-label text-xs transition-all duration-300 tracking-[0.2em]"
+                  key={tab.id}
+                  onClick={() => setCurrentIndex(idx)}
+                  className="whitespace-nowrap flex-shrink-0 text-label text-[10px] transition-all duration-200 tracking-[0.2em]"
                   style={{
-                    color: isActive ? '#D6CFBF' : 'rgba(154, 146, 135, 0.3)',
-                    opacity: isActive ? 1 : 0.5,
-                    transform: isActive ? 'scale(1.05)' : 'scale(1)',
+                    color: isActive ? '#D6CFBF' : 'rgba(214, 207, 191, 0.3)',
                   }}
                 >
                   {tab.label}
@@ -76,7 +67,7 @@ const SwipeCarousel: React.FC<SwipeCarouselProps> = ({ tabs, className = '' }) =
         style={{ touchAction: 'pan-y' }}
       >
         <div
-          className="flex transition-transform duration-500 cubic-bezier(0.4, 0, 0.2, 1)"
+          className="flex transition-transform duration-300 ease-out"
           style={{
             width: `${tabs.length * 100}%`,
             transform: `translateX(calc(-${currentIndex * (100 / tabs.length)}% + ${offset}px))`,

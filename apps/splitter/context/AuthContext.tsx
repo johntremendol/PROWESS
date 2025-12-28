@@ -35,8 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [isRecovering, setIsRecovering] = useState(false);
 
     useEffect(() => {
-        // Initial check for recovery hash in case onAuthStateChange already fired
-        if (typeof window !== 'undefined' && window.location.hash.includes('type=recovery')) {
+        if (typeof window !== 'undefined' && (window.location.hash.includes('type=recovery') || window.location.hash.includes('type=invite'))) {
             setIsRecovering(true);
         }
 

@@ -91,7 +91,7 @@ const LoginPage: React.FC = () => {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="placeholder@aa.co"
-                            className="bg-transparent text-right text-display text-4xl text-prowess-beige italic focus:outline-none placeholder:text-prowess-grey/20 flex-1 ml-4"
+                            className="bg-transparent text-right text-display text-[40px] text-prowess-beige italic focus:outline-none placeholder:text-prowess-grey/20 flex-1 ml-4"
                             required
                         />
                     </div>
@@ -111,7 +111,7 @@ const LoginPage: React.FC = () => {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="0000000"
-                            className="bg-transparent text-right text-display text-4xl text-prowess-grey focus:outline-none placeholder:text-prowess-grey/20 flex-1 ml-4"
+                            className="bg-transparent text-right text-display text-[40px] text-prowess-grey focus:outline-none placeholder:text-prowess-grey/20 flex-1 ml-4"
                             required
                             minLength={6}
                         />
@@ -120,7 +120,7 @@ const LoginPage: React.FC = () => {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="btn-primary w-full mt-8 font-bold tracking-[0.2em] py-5 text-sm"
+                        className="w-full mt-8 py-4 bg-prowess-red text-black text-label text-[15px] font-bold tracking-[0.16em] uppercase hover:bg-prowess-beige transition-colors disabled:opacity-40"
                     >
                         {loading ? 'PROCESSING...' : 'CREATE ACCOUNT'}
                     </button>
@@ -128,7 +128,7 @@ const LoginPage: React.FC = () => {
                         <button
                             type="button"
                             onClick={() => setView('forgot')}
-                            className="text-label text-[16px] text-prowess-grey tracking-[0.14em] normal-case hover:text-prowess-beige transition-colors lowercase"
+                            className="text-[16px] text-prowess-grey tracking-[0.14em] hover:text-prowess-beige transition-colors font-['Optician_Sans']"
                             style={{ textTransform: 'lowercase' }}
                         >
                             regain access ?
@@ -177,7 +177,7 @@ const LoginPage: React.FC = () => {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="btn-primary w-full mt-8 font-bold tracking-[0.2em] py-5 text-sm"
+                        className="w-full mt-8 py-4 bg-prowess-red text-black text-label text-[15px] font-bold tracking-[0.16em] uppercase hover:bg-prowess-beige transition-colors disabled:opacity-40"
                     >
                         {loading ? 'PROCESSING...' : 'ENTER APP'}
                     </button>
@@ -243,7 +243,7 @@ const LoginPage: React.FC = () => {
                         </div>
                         {error && <p className="text-red-500 text-xs italic text-center">{error}</p>}
                         {success && <p className="text-green-500 text-xs italic text-center">{success}</p>}
-                        <button type="submit" disabled={loading} className="btn-primary w-full mt-4 font-bold tracking-[0.2em] py-5">
+                        <button type="submit" disabled={loading} className="w-full py-4 bg-prowess-red text-black text-label text-[15px] font-bold tracking-[0.16em] uppercase hover:bg-prowess-beige transition-colors">
                             {loading ? 'SAVING...' : isInvite ? 'SET KEY & JOIN' : 'UPDATE KEY'}
                         </button>
                     </form>
@@ -275,7 +275,7 @@ const LoginPage: React.FC = () => {
                         </div>
                         {error && <p className="text-red-500 text-xs italic text-center">{error}</p>}
                         {success && <p className="text-green-500 text-xs italic text-center">{success}</p>}
-                        <button type="submit" disabled={loading} className="btn-primary w-full font-bold tracking-[0.2em] py-5">
+                        <button type="submit" disabled={loading} className="w-full py-4 bg-prowess-red text-black text-label text-[15px] font-bold tracking-[0.16em] uppercase hover:bg-prowess-beige transition-colors">
                             {loading ? 'SENDING...' : 'SEND LINK'}
                         </button>
                         <button type="button" onClick={() => setView('signin')} className="text-label text-[16px] text-prowess-grey hover:text-white block mx-auto pt-8 normal-case lowercase" style={{ textTransform: 'lowercase' }}>
@@ -290,17 +290,13 @@ const LoginPage: React.FC = () => {
     // Main View
     return (
         <div className="min-h-screen bg-black flex flex-col items-center p-0">
-            {/* Header / Branding */}
+            {/* Header / Banner - Clean, no gradient */}
             <div className="w-full h-[302px] relative overflow-hidden">
                 <img
                     src={bannerPNG}
                     alt=""
                     className="absolute inset-0 w-full h-full object-cover"
                 />
-                {/* Red Rectangle Texture Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black" />
-
-                {/* Stylized Logo */}
                 <div className="absolute inset-0 flex items-center justify-center">
                     <img
                         src={splitterLogo}
