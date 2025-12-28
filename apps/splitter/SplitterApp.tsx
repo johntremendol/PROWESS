@@ -91,44 +91,62 @@ const SplitterInner: React.FC<SplitterAppProps> = ({ onBack }) => {
 
       if (groupError) throw groupError;
 
-      // 2. Create Members
-      // The first member is the creator (John or user's name). We link it to auth user.
-      const membersPayload = members.map((m, index) => {
-        // Simple heuristic: First member is creator
-        // In real app, we might ask "Which one is you?" or assume index 0 if it matches known user name
-        // For now, let's assume the first member added is the creator.
-        const isCreator = index === 0;
+      // 2. Identify Creator and Others
+      // The first member is the creator (based on CreateFlow logic)
+      const creator = members[0];
+      const otherMembers = members.slice(1);
 
-        return {
+      // 3. Insert Creator (Establishes Membership for RLS)
+      const creatorPayload = {
+        group_id: groupData.id,
+        name: creator.name,
+        user_id: user.id,
+        email: user.email
+      };
+
+      const { data: creatorData, error: creatorError } = await supabase
+        .from('members')
+        .insert(creatorPayload)
+        .select()
+        .single();
+
+      if (creatorError) throw creatorError;
+
+      let allMembers = [creatorData];
+
+      // 4. Insert Other Members (if any)
+      if (otherMembers.length > 0) {
+        const othersPayload = otherMembers.map(m => ({
           group_id: groupData.id,
           name: m.name,
-          user_id: isCreator ? user.id : null,
-          email: isCreator ? user.email : null
-        };
-      });
+          user_id: null,
+          email: null
+        }));
 
-      const { data: membersData, error: membersError } = await supabase
-        .from('members')
-        .insert(membersPayload)
-        .select();
+        const { data: othersData, error: othersError } = await supabase
+          .from('members')
+          .insert(othersPayload)
+          .select();
 
-      if (membersError) throw membersError;
+        if (othersError) throw othersError;
+        allMembers = [...allMembers, ...othersData];
+      }
 
-      // Update local state
+      // 5. Update local state
       const newGroup: Group = {
         id: groupData.id,
         name: groupData.name,
         currency: groupData.currency,
-        members: membersData as Member[],
+        members: allMembers as Member[],
         expenses: []
       };
 
       setGroups([newGroup, ...groups]);
       setActiveGroupId(newGroup.id);
       setView('DETAILS');
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error creating group:", err);
-      alert("Failed to create group. Please ensure you've run the SQL schema in Supabase.");
+      alert(`Failed to create group: ${err.message || "Unknown error"}`);
     }
   };
 

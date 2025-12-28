@@ -28,7 +28,8 @@ const AccountView: React.FC<AccountViewProps> = ({ onClose }) => {
                     <Avatar name={user.email || 'U'} size="lg" variant="filled" />
                     <div className="text-center">
                         <p className="text-display text-xl text-prowess-beige">{user.email}</p>
-                        <p className="text-label text-xs text-prowess-grey mt-1">LOGGED IN VIA MAGIC LINK</p>
+                        <p className="text-label text-xs text-prowess-grey mt-1">LOGGED IN</p>
+                        <p className="font-mono text-[10px] text-white/10 mt-2 select-all">{user.id}</p>
                     </div>
                 </div>
 
