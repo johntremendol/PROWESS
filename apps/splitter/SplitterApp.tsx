@@ -365,6 +365,8 @@ const SplitterInner: React.FC<SplitterAppProps> = ({ onBack }) => {
     await handleAddExpense(expensePayload);
   };
 
+  const isResetFlow = typeof window !== 'undefined' && window.location.hash.includes('type=recovery');
+
   if (authLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -373,7 +375,7 @@ const SplitterInner: React.FC<SplitterAppProps> = ({ onBack }) => {
     );
   }
 
-  if (!user) {
+  if (!user || isResetFlow) {
     return <LoginPage />;
   }
 
