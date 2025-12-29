@@ -85,7 +85,11 @@ const SplitterInner: React.FC<SplitterAppProps> = ({ onBack }) => {
       // 1. Create Group
       const { data: groupData, error: groupError } = await supabase
         .from('groups')
-        .insert({ name, currency })
+        .insert({
+          name,
+          currency,
+          created_by: user.id
+        })
         .select()
         .single();
 
