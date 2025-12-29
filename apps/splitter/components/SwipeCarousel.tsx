@@ -46,7 +46,7 @@ const SwipeCarousel: React.FC<SwipeCarouselProps> = ({ tabs, className = '' }) =
                 <button
                   key={tab.id}
                   onClick={() => setCurrentIndex(idx)}
-                  className="whitespace-nowrap flex-shrink-0 text-label text-[10px] transition-all duration-200 tracking-[0.2em]"
+                  className="whitespace-nowrap flex-shrink-0 text-label text-xs transition-all duration-200 tracking-[0.2em]"
                   style={{
                     color: isActive ? '#D6CFBF' : 'rgba(214, 207, 191, 0.3)',
                   }}

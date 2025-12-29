@@ -71,7 +71,7 @@ const AuthScreen = () => {
                         </span>
                     </button>
 
-                    <p className="text-label text-[10px] text-prowess-grey/50 tracking-widest uppercase">
+                    <p className="text-label text-xs text-prowess-grey/50 tracking-widest uppercase">
                         Powered by Prowess
                     </p>
                 </div>
