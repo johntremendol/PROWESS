@@ -387,17 +387,6 @@ const SplitterInner: React.FC<SplitterAppProps> = ({ onBack }) => {
 
   // --- Views ---
 
-  // CREATE VIEW
-  if (view === 'CREATE') {
-    return (
-      <CreateFlow
-        initialMemberName={user?.email ? user.email.split('@')[0] : 'Me'}
-        onCreateGroup={handleCreateGroup}
-        onCancel={() => setView('GROUPS')}
-      />
-    );
-  }
-
   // DETAILS VIEW
   if (view === 'DETAILS' && activeGroup) {
     return (
@@ -417,7 +406,7 @@ const SplitterInner: React.FC<SplitterAppProps> = ({ onBack }) => {
     );
   }
 
-  // GROUPS VIEW (Default)
+  // GROUPS VIEW (Default) + CREATE OVERLAY
   return (
     <div className="min-h-screen bg-black flex flex-col">
       {/* Header */}
@@ -470,6 +459,15 @@ const SplitterInner: React.FC<SplitterAppProps> = ({ onBack }) => {
           </div>
         )}
       </div>
+
+      {/* CREATE GROUP OVERLAY */}
+      {view === 'CREATE' && (
+        <CreateFlow
+          initialMemberName={user?.email ? user.email.split('@')[0] : 'Me'}
+          onCreateGroup={handleCreateGroup}
+          onCancel={() => setView('GROUPS')}
+        />
+      )}
     </div>
   );
 };

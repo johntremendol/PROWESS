@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Plus, Trash2 } from '../../../components/ui/Icons';
-import Avatar from './Avatar';
+import Avatar, { getInitials } from './Avatar';
 import { Group } from '../../../types';
 
 interface EditGroupSheetProps {
@@ -47,11 +47,15 @@ const EditGroupSheet: React.FC<EditGroupSheetProps> = ({ group, onUpdateGroup, o
     const [isNameEditing, setIsNameEditing] = useState(false);
     const [isMemberInputVisible, setIsMemberInputVisible] = useState(false);
     const [isClosing, setIsClosing] = useState(false);
+    const [isVisible, setIsVisible] = useState(false);
 
     const nameInputRef = useRef<HTMLInputElement>(null);
     const memberInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
+        // Trigger entrance animation
+        requestAnimationFrame(() => setIsVisible(true));
+
         // Prevent body scroll
         document.body.style.overflow = 'hidden';
         return () => { document.body.style.overflow = ''; };
@@ -82,6 +86,15 @@ const EditGroupSheet: React.FC<EditGroupSheetProps> = ({ group, onUpdateGroup, o
 
     const handleAddMember = () => {
         if (!memberName.trim()) return;
+
+        const newInitials = getInitials(memberName.trim());
+        const existingInitials = members.map(m => getInitials(m.name));
+
+        if (existingInitials.includes(newInitials)) {
+            alert(`Member initials "${newInitials}" already exist in this group. Please use a distinct name.`);
+            return;
+        }
+
         setMembers([...members, { id: null, name: memberName.trim() }]);
         setMemberName('');
         memberInputRef.current?.focus();
@@ -105,6 +118,20 @@ const EditGroupSheet: React.FC<EditGroupSheetProps> = ({ group, onUpdateGroup, o
 
     // Also allow editing existing member names
     const handleEditMemberName = (index: number, newName: string) => {
+        const trimmedName = newName.trim();
+        if (trimmedName) {
+            const newInitials = getInitials(trimmedName);
+            const otherMembersInitials = members
+                .filter((_, i) => i !== index)
+                .map(m => getInitials(m.name));
+
+            if (otherMembersInitials.includes(newInitials)) {
+                // We'll allow typing, but maybe highlight it? 
+                // For simplicity here, we'll just let them edit but handle the conflict in handleUpdate
+                // Or prevent the change if it conflicts. Let's prevent it to be consistent.
+                // However, while typing it's annoying. Let's check on Blur or Update.
+            }
+        }
         const newMembers = [...members];
         newMembers[index].name = newName;
         setMembers(newMembers);
@@ -112,6 +139,17 @@ const EditGroupSheet: React.FC<EditGroupSheetProps> = ({ group, onUpdateGroup, o
 
     const handleUpdate = () => {
         if (groupName.trim() && members.length >= 2) {
+            // Final check for unique initials before saving
+            const initialsSet = new Set();
+            for (const m of members) {
+                const initials = getInitials(m.name);
+                if (initialsSet.has(initials)) {
+                    alert(`Multiple members have the same initials (${initials}). Please ensure all members have unique names.`);
+                    return;
+                }
+                initialsSet.add(initials);
+            }
+
             onUpdateGroup(groupName.trim(), members, CURRENCIES[currencyIndex].symbol);
             handleClose();
         }
@@ -121,19 +159,23 @@ const EditGroupSheet: React.FC<EditGroupSheetProps> = ({ group, onUpdateGroup, o
 
     return (
         <>
-            {/* Red Backdrop */}
+            {/* Beige Backdrop */}
             <div
-                className={`fixed inset-0 z-40 transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-90'}`}
-                style={{ backgroundColor: '#CC342C' }}
+                className={`fixed inset-0 z-40 transition-opacity duration-500 ease-out-quint ${!isVisible || isClosing ? 'opacity-0' : 'opacity-100'}`}
+                style={{
+                    backgroundColor: 'rgba(214, 207, 191, 0.25)', // D6CFBF at 25% opacity
+                    backdropFilter: 'blur(1px)',
+                    transitionTimingFunction: 'cubic-bezier(0.22, 1, 0.36, 1)'
+                }}
                 onClick={handleClose}
             />
 
             {/* Sheet Content - Slide Up */}
             <div
-                className={`fixed inset-x-0 bottom-0 z-50 bg-black flex flex-col transition-transform duration-400 ${isClosing ? 'translate-y-full' : 'translate-y-0'}`}
+                className={`fixed inset-x-0 bottom-0 z-50 bg-black flex flex-col transition-transform duration-500 ${!isVisible || isClosing ? 'translate-y-full' : 'translate-y-0'}`}
                 style={{
                     height: '85vh',
-                    transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
+                    transitionTimingFunction: 'cubic-bezier(0.19, 1, 0.22, 1)',
                 }}
             >
                 {/* Red Header Banner Portion */}

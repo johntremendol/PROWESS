@@ -15,8 +15,9 @@ interface RotatingDialProps {
  * 
  * Interactive circular dial for amount input with:
  * - Drag around edges to rotate
- * - Velocity-based increments (slow: 1, medium: 10, fast: 100)
+ * - Velocity-based acceleration for intuitive value changes
  * - Manual input via clicking the amount
+ * - Granular control via +/- buttons
  * - ringcirlces.svg as rotating background
  */
 const RotatingDial: React.FC<RotatingDialProps> = ({
@@ -29,6 +30,10 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
   const [rotation, setRotation] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value.toString());
+
+  // Tuning parameter for velocity-based acceleration
+  // Higher value = more aggressive acceleration
+  const ACCELERATION_FACTOR = 0.5;
 
   const lastAngle = useRef(0);
   const lastTime = useRef(Date.now());
@@ -75,21 +80,29 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
         if (normalizedDelta < -Math.PI) normalizedDelta += 2 * Math.PI;
 
         // Calculate velocity (radians per ms)
-        const angularVelocity = Math.abs(normalizedDelta) / Math.max(deltaTime, 1);
+        // Ensure minimal deltaTime to avoid division by zero or extreme spikes
+        const safeDeltaTime = Math.max(deltaTime, 1);
+        const angularVelocity = Math.abs(normalizedDelta) / safeDeltaTime;
 
-        // Determine increment based on velocity
-        let increment = 1;
-        if (angularVelocity > 0.02) {
-          increment = 20; // Fast rotation
-        } else if (angularVelocity > 0.005) {
-          increment = 10; // Medium rotation
-        }
+        // Calculate increment based on velocity and acceleration factor
+        // Base increment is 1
+        // As velocity increases, increment grows exponentially based on ACCELERATION_FACTOR
+        // Tuning: 
+        // 1. Base multiplier scales the raw velocity up to usable numbers
+        // 2. Power function gives the "feel" of acceleration
+        const velocityMultiplier = 1 + Math.pow(angularVelocity * 1000 * ACCELERATION_FACTOR, 2);
+        const increment = Math.max(1, Math.round(velocityMultiplier));
 
         // Update value based on rotation direction - FLIPPED: right = increase
         const direction = normalizedDelta > 0 ? -1 : 1;
-        const newValue = Math.max(min, Math.min(max, value + increment * direction));
 
-        if (newValue !== value) {
+        // Use functional state update or ref to avoid stale closure if direct update
+        // But here we rely on parent passed 'value' which updates on re-render. 
+        // For smooth drag, we might missframes if parent doesn't update fast enough.
+        // using latestValueRef.current is safer for calculation base.
+        const newValue = Math.max(min, Math.min(max, latestValueRef.current + increment * direction));
+
+        if (newValue !== latestValueRef.current) {
           onChange(newValue);
         }
 
@@ -108,6 +121,7 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
     {
       axis: undefined, // Allow both x and y
       pointer: { touch: true },
+      // Don't filter taps inside here, handle clicks on children separately
     }
   );
 
@@ -117,23 +131,19 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
 
     let { velocity, direction } = inertia;
     let animationFrameId: number;
-    const decelerationRate = 0.95; // How fast the velocity decreases per frame
-    const minVelocity = 0.001; // Stop when velocity is very low
+    const decelerationRate = 0.92; // Friction: lower = stops faster
+    const minVelocity = 0.0005; // Stop threshold
 
     const step = () => {
       if (velocity < minVelocity) {
-        setInertia(null); // Stop inertia
+        setInertia(null);
         return;
       }
 
-      let increment = 1;
-      if (velocity > 0.02) {
-        increment = 20;
-      } else if (velocity > 0.005) {
-        increment = 10;
-      }
+      // Consistent acceleration logic for inertia
+      const velocityMultiplier = 1 + Math.pow(velocity * 1000 * ACCELERATION_FACTOR, 2);
+      const increment = Math.max(1, Math.round(velocityMultiplier));
 
-      // Calculate change based on current velocity and direction
       const change = increment * direction;
       const currentValue = latestValueRef.current;
       const newValue = Math.max(min, Math.min(max, currentValue + change));
@@ -142,12 +152,10 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
         onChange(newValue);
       }
 
-      // Update rotation for visual feedback during inertia
-      // Arbitrary scaling for visual effect
+      // Visual rotation during inertia
       setRotation(prev => prev + (velocity * 180 / Math.PI * direction * 5));
 
-      velocity *= decelerationRate; // Decelerate
-
+      velocity *= decelerationRate;
       animationFrameId = requestAnimationFrame(step);
     };
 
@@ -156,16 +164,26 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [inertia, min, max, onChange]); // Include min, max, onChange as they are stable props/functions
+  }, [inertia, min, max, onChange]);
 
-  const handleAmountClick = () => {
+  const handleAmountClick = (e: React.MouseEvent | React.TouchEvent) => {
+    // Prevent default to avoid double firing on touch devices if mapped incorrectly
+    // But allow focus
+    e.stopPropagation();
     setIsEditing(true);
-    setTimeout(() => inputRef.current?.focus(), 0);
+    // Immediate focus
+    // We use a slight timeout to ensure the render cycle completes switching div to input
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+        // Optional: Select all text for quick overwrite
+        inputRef.current.select();
+      }
+    }, 10);
   };
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
-    // Allow only numbers and one decimal point
     if (/^\d*\.?\d*$/.test(val)) {
       setEditValue(val);
     }
@@ -178,48 +196,25 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
     setIsEditing(false);
   };
 
-  const handleIncrement = () => {
+  // Simple increment/decrement without hold logic
+  const handleIncrement = (e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation(); // Prevent drag from catching this
     const newValue = Math.min(max, value + 1);
     onChange(newValue);
   };
 
-  const handleDecrement = () => {
+  const handleDecrement = (e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
     const newValue = Math.max(min, value - 1);
     onChange(newValue);
   };
-
-  // Interval ref for long press
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  const startIncrement = () => {
-    handleIncrement(); // Trigger once immediately
-    intervalRef.current = setInterval(handleIncrement, 100); // Repeat every 100ms
-  };
-
-  const startDecrement = () => {
-    handleDecrement(); // Trigger once immediately
-    intervalRef.current = setInterval(handleDecrement, 100); // Repeat every 100ms
-  };
-
-  const stopInterval = () => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  };
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => stopInterval();
-  }, []);
 
   const formatAmount = (amount: number): string => {
     return Math.round(amount).toLocaleString();
   };
 
-  // Calculate responsive underline width based on amount string
   const amountString = `${currency}${formatAmount(value)}`;
-  const underlineWidth = Math.max(80, amountString.length * 35); // ~35px per character, min 80px
+  const underlineWidth = Math.max(80, amountString.length * 35);
 
   return (
     <div className="flex flex-col items-center w-full overflow-hidden">
@@ -231,12 +226,12 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
         style={{
           width: 'min(100vw, 440px)',
           height: 'min(100vw, 440px)',
-          bottom: 'calc(min(100vw, 440px) / -2)', // Position center at bottom of container
+          bottom: 'calc(min(100vw, 440px) / -2)',
           touchAction: 'none',
           willChange: 'transform',
           borderRadius: '50%',
-          backgroundColor: '#1F1A17', // Warm dark background to cover content behind
-          boxShadow: '0 -10px 40px rgba(0,0,0,0.5)', // Shadow to separate from content
+          backgroundColor: '#1F1A17',
+          boxShadow: '0 -10px 40px rgba(0,0,0,0.5)',
         }}
       >
         {/* Ring Circles SVG Background */}
@@ -245,7 +240,7 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
           style={{
             transform: `rotate(${rotation}deg)`,
             transitionProperty: 'transform',
-            padding: '10px', // Half of previous 20px
+            padding: '10px',
           }}
         >
           <img
@@ -262,12 +257,9 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
           {/* Amount Display/Input */}
           <div className="flex items-center gap-8 mb-2">
             <button
-              onMouseDown={startDecrement}
-              onMouseUp={stopInterval}
-              onMouseLeave={stopInterval}
-              onTouchStart={startDecrement}
-              onTouchEnd={stopInterval}
+              onClick={handleDecrement}
               className="text-prowess-beige/60 hover:text-prowess-beige text-3xl transition-colors p-2 select-none"
+            // Remove touch handlers that were used for long press
             >
               −
             </button>
@@ -286,12 +278,17 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
                     }
                   }}
                   className="text-display text-5xl text-prowess-beige bg-transparent outline-none text-center font-normal"
-                  style={{ caretColor: '#D6CFBF' }}
+                  style={{ caretColor: '#D6CFBF', width: `${Math.max(120, editValue.length * 30)}px` }}
                 />
               ) : (
                 <div
                   onClick={handleAmountClick}
-                  className="text-display text-5xl text-prowess-beige cursor-pointer text-center font-normal"
+                  onTouchEnd={(e) => {
+                    // Prevent ghost clicks if needed, but onClick usually suffices. 
+                    // To ensure 1-tap on mobile without drag interference:
+                    handleAmountClick(e);
+                  }}
+                  className="text-display text-5xl text-prowess-beige cursor-pointer text-center font-normal select-none"
                 >
                   {currency}{formatAmount(value)}
                 </div>
@@ -305,11 +302,7 @@ const RotatingDial: React.FC<RotatingDialProps> = ({
             </div>
 
             <button
-              onMouseDown={startIncrement}
-              onMouseUp={stopInterval}
-              onMouseLeave={stopInterval}
-              onTouchStart={startIncrement}
-              onTouchEnd={stopInterval}
+              onClick={handleIncrement}
               className="text-prowess-beige/60 hover:text-prowess-beige text-3xl transition-colors p-2 select-none"
             >
               +

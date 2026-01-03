@@ -44,11 +44,15 @@ const AddExpenseSheet: React.FC<AddExpenseSheetProps> = ({
   const [splitMembers, setSplitMembers] = useState<string[]>([]);
   const [totalAmount, setTotalAmount] = useState(0);
   const [isClosing, setIsClosing] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
   const [isTitleEditing, setIsTitleEditing] = useState(false);
 
   const titleInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    // Trigger entrance animation
+    requestAnimationFrame(() => setIsVisible(true));
+
     // Prevent body scroll when sheet is open
     document.body.style.overflow = 'hidden';
 
@@ -56,7 +60,7 @@ const AddExpenseSheet: React.FC<AddExpenseSheetProps> = ({
     setTimeout(() => {
       titleInputRef.current?.focus();
       setIsTitleEditing(true);
-    }, 400);
+    }, 500); // Slightly delayed to match animation
 
     return () => {
       document.body.style.overflow = '';
@@ -130,16 +134,9 @@ const AddExpenseSheet: React.FC<AddExpenseSheetProps> = ({
         delete next[memberId];
         // If this was the focused payer, unfocus
         if (focusedPayerId === memberId) setFocusedPayerId(null);
-
-        // Recalculate total if we were in manual mode? 
-        // Actually, if we remove a payer, the total typically decreases if we are summing.
-        // But if the dial controls the TOTAL, we should redistribute the EXISTING total to remaining?
-        // Let's stick to: Dial controls Total. Removing a payer redistributes Total among remaining.
-        // unless total was 0.
       } else {
         // Add payer
-        next[memberId] = 0; // Starts at 0, or share?
-        // Let's trigger a redistribution of the current total
+        next[memberId] = 0;
       }
 
       // Redistribute total amount among new set of payers
@@ -211,19 +208,24 @@ const AddExpenseSheet: React.FC<AddExpenseSheetProps> = ({
 
   return (
     <>
-      {/* Red Backdrop */}
+      {/* Beige Backdrop */}
       <div
-        className={`fixed inset-0 z-40 transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-90'}`}
-        style={{ backgroundColor: '#CC342C' }}
+        className={`fixed inset-0 z-40 transition-opacity duration-500 ease-out-quint ${!isVisible || isClosing ? 'opacity-0' : 'opacity-100'}`}
+        style={{
+          backgroundColor: 'rgba(214, 207, 191, 0.25)', // D6CFBF at 25% opacity
+          backdropFilter: 'blur(1px)',
+          transitionTimingFunction: 'cubic-bezier(0.22, 1, 0.36, 1)'
+        }}
         onClick={handleClose}
       />
 
       {/* Sheet Content */}
       <div
-        className={`fixed inset-x-0 bottom-0 z-50 bg-black flex flex-col transition-transform duration-400 ${isClosing ? 'translate-y-full' : 'translate-y-0'}`}
+        className={`fixed inset-x-0 bottom-0 z-50 bg-black flex flex-col transition-transform duration-500 ${!isVisible || isClosing ? 'translate-y-full' : 'translate-y-0'}`}
         style={{
           height: '80vh',
-          transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
+          // Custom easing for "pop" effect
+          transitionTimingFunction: 'cubic-bezier(0.19, 1, 0.22, 1)',
         }}
         onClick={() => setFocusedPayerId(null)} // Click background to unfocus specific payer
       >
