@@ -4,7 +4,7 @@ import { Member } from '../../../types';
 interface AvatarProps {
   name: string;
   size?: 'xs' | 'sm' | 'md' | 'lg';
-  variant?: 'outline' | 'filled';
+  variant?: 'outline' | 'filled' | 'profile';
   className?: string;
 }
 
@@ -71,7 +71,9 @@ const Avatar: React.FC<AvatarProps> = ({
   const variantClasses =
     variant === 'outline'
       ? 'bg-stone-900 border border-stone-700 text-prowess-grey'
-      : 'bg-prowess-beige text-prowess-red';
+      : variant === 'profile'
+        ? 'bg-black border border-prowess-red text-prowess-red'
+        : 'bg-prowess-beige text-prowess-red';
 
   return (
     <div
@@ -108,7 +110,7 @@ export const AvatarStack: React.FC<AvatarStackProps> = ({
         />
       ))}
       {overflow > 0 && (
-        <div 
+        <div
           className={`
             ${sizeMap[size]} rounded-full bg-stone-800 border-2 border-black
             flex items-center justify-center text-label text-prowess-grey

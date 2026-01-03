@@ -382,7 +382,7 @@ const SplitterInner: React.FC<SplitterAppProps> = ({ onBack }) => {
   }
 
   if (showAccount) {
-    return <AccountView onClose={() => setShowAccount(false)} />;
+    return <AccountView onClose={() => setShowAccount(false)} groups={groups} />;
   }
 
   // --- Views ---
@@ -411,6 +411,8 @@ const SplitterInner: React.FC<SplitterAppProps> = ({ onBack }) => {
         onUpdateGroup={(name, members, currency) => handleUpdateGroup(activeGroup.id, name, members, currency)}
         onDeleteExpense={handleDeleteExpense}
         onAddSettlement={handleAddSettlement}
+        currentUserName={user?.email}
+        onProfileClick={() => setShowAccount(true)}
       />
     );
   }
@@ -422,6 +424,7 @@ const SplitterInner: React.FC<SplitterAppProps> = ({ onBack }) => {
       <Header
         onBack={onBack}
         onProfileClick={() => setShowAccount(true)}
+        userName={user?.email}
       />
 
       {/* Content - Full Width, No Padding */}

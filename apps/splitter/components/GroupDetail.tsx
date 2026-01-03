@@ -33,6 +33,8 @@ interface GroupDetailProps {
   onAddSettlement?: (settlement: Omit<Settlement, 'id'>) => void;
   onDeleteExpense?: (expenseId: string) => void;
   onCustomCategoryAdd?: (category: string) => void;
+  currentUserName?: string;
+  onProfileClick?: () => void;
 }
 
 /**
@@ -51,6 +53,8 @@ const GroupDetail: React.FC<GroupDetailProps> = ({
   onAddSettlement,
   onDeleteExpense,
   onCustomCategoryAdd,
+  currentUserName,
+  onProfileClick,
 }) => {
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [showAddExpense, setShowAddExpense] = useState(false);
@@ -152,7 +156,12 @@ const GroupDetail: React.FC<GroupDetailProps> = ({
   return (
     <div className="min-h-screen bg-black flex flex-col">
       {/* Fixed Header */}
-      <Header onBack={onBack} backLabel="GROUPS" />
+      <Header
+        onBack={onBack}
+        backLabel="GROUPS"
+        userName={currentUserName}
+        onProfileClick={onProfileClick}
+      />
 
       {/* Scrollable Content Area - Everything scrolls together */}
       <div className={`flex-1 ${showAddExpense || showAddSettlement || showEditGroup || selectedExpense || selectedSettlement ? 'overflow-hidden' : 'overflow-y-auto'}`}>
