@@ -41,9 +41,18 @@ const ExpenseSheet: React.FC<ExpenseSheetProps> = ({
   const [splitMembers, setSplitMembers] = useState<string[]>([]);
   const [totalAmount, setTotalAmount] = useState(0);
   const [isClosing, setIsClosing] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
   const [isTitleEditing, setIsTitleEditing] = useState(false);
 
   const titleInputRef = useRef<HTMLInputElement>(null);
+
+  // Separate effect for entrance animation to avoid re-triggering on expense updates
+  useEffect(() => {
+    // Reset visibility first to ensure animation plays if component is re-mounted quickly
+    setIsVisible(false);
+    const raf = requestAnimationFrame(() => setIsVisible(true));
+    return () => cancelAnimationFrame(raf);
+  }, []); // Run only on mount
 
   // Initialize state when expense changes
   useEffect(() => {
@@ -207,16 +216,20 @@ const ExpenseSheet: React.FC<ExpenseSheetProps> = ({
   return (
     <>
       <div
-        className={`fixed inset-0 z-40 transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-90'}`}
-        style={{ backgroundColor: '#CC342C' }}
+        className={`fixed inset-0 z-40 transition-opacity duration-500 ease-out-quint ${!isVisible || isClosing ? 'opacity-0' : 'opacity-100'}`}
+        style={{
+          backgroundColor: 'rgba(214, 207, 191, 0.25)', // D6CFBF at 25% opacity
+          backdropFilter: 'blur(1px)',
+          transitionTimingFunction: 'cubic-bezier(0.22, 1, 0.36, 1)'
+        }}
         onClick={handleClose}
       />
 
       <div
-        className={`fixed inset-x-0 bottom-0 z-50 bg-black flex flex-col transition-transform duration-400 ${isClosing ? 'translate-y-full' : 'translate-y-0'}`}
+        className={`fixed inset-x-0 bottom-0 z-50 bg-black flex flex-col transition-transform duration-500 ${!isVisible || isClosing ? 'translate-y-full' : 'translate-y-0'}`}
         style={{
           height: '80vh',
-          transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
+          transitionTimingFunction: 'cubic-bezier(0.19, 1, 0.22, 1)',
         }}
         onClick={() => setFocusedPayerId(null)}
       >

@@ -174,9 +174,9 @@ const AddSettlementSheet: React.FC<AddSettlementSheetProps> = ({
                 {/* Scrollable Content */}
                 <div className="flex-1 overflow-y-auto overflow-x-hidden px-6 pt-2 pb-4 space-y-8">
                     {/* PAID BY Section */}
-                    <div>
-                        <p className="text-label text-xs text-prowess-grey mb-4">PAID BY</p>
-                        <div className="flex items-center gap-3 flex-wrap">
+                    <div className="flex flex-col gap-0">
+                        <p className="text-label text-xs text-prowess-grey">PAID BY</p>
+                        <div className="-mx-6 flex flex-col" style={{ gap: 0 }}>
                             {members.map((member) => {
                                 const isSelected = paidBy === member.id;
                                 const isDisabled = paidTo === member.id;
@@ -185,15 +185,23 @@ const AddSettlementSheet: React.FC<AddSettlementSheetProps> = ({
                                         key={member.id}
                                         onClick={() => !isDisabled && setPaidBy(member.id)}
                                         disabled={isDisabled}
-                                        className={`rounded-full transition-all ${isSelected ? 'ring-2 ring-prowess-beige/60' : ''} ${isDisabled ? 'opacity-30 cursor-not-allowed' : 'opacity-70 hover:opacity-100'}`}
+                                        className={`w-full flex items-center justify-between px-6 py-3 transition-all border-0 outline-none focus:outline-none focus:ring-0 m-0 ${isSelected ? 'bg-[#1F1A17]' : 'bg-black'} ${isDisabled ? 'opacity-30 cursor-not-allowed' : 'hover:bg-[#231d19]'}`}
+                                        style={{ margin: 0, border: 'none', boxShadow: 'none' }}
                                         aria-pressed={isSelected}
-                                        aria-label={`Paid by ${member.name}`}
                                     >
-                                        <Avatar
-                                            name={member.name}
-                                            size="md"
-                                            variant={isSelected ? 'filled' : 'outline'}
-                                        />
+                                        <div className="flex items-center gap-3">
+                                            <Avatar
+                                                name={member.name}
+                                                size="md"
+                                                variant={isSelected ? 'filled' : 'outline'}
+                                            />
+                                            <span className="text-display text-lg text-prowess-beige">{member.name}</span>
+                                        </div>
+                                        {isSelected && (
+                                            <span className="text-display text-lg text-prowess-beige">
+                                                PAYER
+                                            </span>
+                                        )}
                                     </button>
                                 );
                             })}

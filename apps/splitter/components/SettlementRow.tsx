@@ -30,8 +30,8 @@ const SettlementRow: React.FC<SettlementRowProps> = ({
     >
       <div className="flex flex-col gap-2 w-full">
         {/* Top Row: visual flow */}
-        <div className="flex items-center justify-between w-full relative h-10">
-          <div className="z-10 bg-[#1F1A17]">
+        <div className="flex items-center justify-between w-full h-10">
+          <div className="flex-none">
             <Avatar
               name={from.name}
               size="md"
@@ -39,16 +39,23 @@ const SettlementRow: React.FC<SettlementRowProps> = ({
             />
           </div>
 
-          <div className="absolute left-4 right-4 h-px bg-prowess-red z-0" />
+          <div className="flex-1 flex items-center">
+            {/* Left Line Segment */}
+            <div className="flex-1 h-px bg-prowess-red mx-3" />
 
-          <div className="bg-[#1F1A17] px-3 z-10">
-            <div className="text-display text-2xl text-prowess-beige italic">
+            {/* Amount */}
+            <div className="text-display text-2xl text-prowess-beige italic flex-none">
               {currency}{Math.round(amount).toLocaleString()}
+            </div>
+
+            {/* Right Line Segment + Arrow */}
+            <div className="flex-1 flex items-center mx-3 relative">
+              <div className="w-full h-px bg-prowess-red" />
+              <div className="absolute right-[-4px] w-0 h-0 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent border-l-[6px] border-l-prowess-red" />
             </div>
           </div>
 
-          <div className="z-10 bg-[#1F1A17] relative">
-            <div className="absolute left-[-8px] top-1/2 -translate-y-1/2 w-0 h-0 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent border-l-[6px] border-l-prowess-red" />
+          <div className="flex-none">
             <Avatar
               name={to.name}
               size="md"
