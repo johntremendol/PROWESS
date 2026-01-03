@@ -314,7 +314,6 @@ const CreateFlow: React.FC<CreateFlowProps> = ({ initialMemberName, onCreateGrou
           </button>
         </div>
       </div>
-    </div >
     </>
   );
 };
