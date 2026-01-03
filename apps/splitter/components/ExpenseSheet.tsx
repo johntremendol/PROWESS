@@ -46,12 +46,12 @@ const ExpenseSheet: React.FC<ExpenseSheetProps> = ({
 
   const titleInputRef = useRef<HTMLInputElement>(null);
 
-  // Separate effect for entrance animation to avoid re-triggering on expense updates
+  // Separate effect for entrance animation
+  // Using setTimeout instead of RAF to ensure the initial 'hidden' state is painted
+  // especially since we have other state updates (expense data) occurring on mount.
   useEffect(() => {
-    // Reset visibility first to ensure animation plays if component is re-mounted quickly
-    setIsVisible(false);
-    const raf = requestAnimationFrame(() => setIsVisible(true));
-    return () => cancelAnimationFrame(raf);
+    const timer = setTimeout(() => setIsVisible(true), 50);
+    return () => clearTimeout(timer);
   }, []); // Run only on mount
 
   // Initialize state when expense changes
