@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import { forwardRef } from 'react';
 import { Group, Expense } from '../../../types';
 import Avatar from './Avatar';
 
