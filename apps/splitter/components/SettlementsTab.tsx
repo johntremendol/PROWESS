@@ -17,12 +17,13 @@ interface SettlementsTabProps {
   settlements?: Settlement[];
   onNewSettlement: () => void;
   onSettlementClick?: (settlement: Settlement) => void;
+  onSettleDebt?: (debt: Debt) => void;
 }
 
 /**
  * Settlements tab showing:
  * - New Settlement button (red bar)
- * - PENDING section with calculated debts
+ * - PENDING section with calculated debts (long-press to settle)
  * - HISTORY section with recorded settlements
  */
 const SettlementsTab: React.FC<SettlementsTabProps> = ({
@@ -32,6 +33,7 @@ const SettlementsTab: React.FC<SettlementsTabProps> = ({
   settlements = [],
   onNewSettlement,
   onSettlementClick,
+  onSettleDebt,
 }) => {
   const getMember = (id: string) => members.find(m => m.id === id);
 
@@ -72,6 +74,8 @@ const SettlementsTab: React.FC<SettlementsTabProps> = ({
                 to={to}
                 amount={debt.amount}
                 currency={currency}
+                isPending={true}
+                onLongPress={() => onSettleDebt?.(debt)}
               />
             );
           })}
@@ -102,6 +106,7 @@ const SettlementsTab: React.FC<SettlementsTabProps> = ({
                     to={to}
                     amount={settlement.amount}
                     currency={currency}
+                    isPending={false}
                   />
                 </div>
               );

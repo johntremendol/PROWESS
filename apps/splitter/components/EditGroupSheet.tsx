@@ -1,10 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
-import { Plus, Trash2 } from '../../../components/ui/Icons';
+import { Plus, Trash2, Share } from '../../../components/ui/Icons';
 import Avatar, { getInitials } from './Avatar';
-import { Group } from '../../../types';
+import { Group, Expense } from '../../../types';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import PDFReport from './PDFReport';
 
 interface EditGroupSheetProps {
     group: Group;
+    expenses?: Expense[]; // Need expenses for the report
+    settlements?: any[]; // Need settlements for the report
     onUpdateGroup: (name: string, members: { id: string | null; name: string; email?: string }[], currency: string) => void;
     onClose: () => void;
 }
@@ -31,7 +36,7 @@ const CURRENCIES = [
  * Edit group details (name, currency, members).
  * Visualization matches CreateFlow but presented as a slide-up sheet.
  */
-const EditGroupSheet: React.FC<EditGroupSheetProps> = ({ group, onUpdateGroup, onClose }) => {
+const EditGroupSheet: React.FC<EditGroupSheetProps> = ({ group, expenses = [], settlements = [], onUpdateGroup, onClose }) => {
     // Initialize state from existing group
     const [groupName, setGroupName] = useState(group.name);
     const [currencyIndex, setCurrencyIndex] = useState(
@@ -48,6 +53,10 @@ const EditGroupSheet: React.FC<EditGroupSheetProps> = ({ group, onUpdateGroup, o
     const [isMemberInputVisible, setIsMemberInputVisible] = useState(false);
     const [isClosing, setIsClosing] = useState(false);
     const [isVisible, setIsVisible] = useState(false);
+
+    // PDF Generation State
+    const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+    const pdfReportRef = useRef<HTMLDivElement>(null);
 
     const nameInputRef = useRef<HTMLInputElement>(null);
     const memberInputRef = useRef<HTMLInputElement>(null);
@@ -111,27 +120,10 @@ const EditGroupSheet: React.FC<EditGroupSheetProps> = ({ group, onUpdateGroup, o
     };
 
     const handleRemoveMember = (index: number) => {
-        // Note: Removing existing members might be blocked by backend if they have expenses
-        // But we update state here regardless
         setMembers(members.filter((_, i) => i !== index));
     };
 
-    // Also allow editing existing member names
     const handleEditMemberName = (index: number, newName: string) => {
-        const trimmedName = newName.trim();
-        if (trimmedName) {
-            const newInitials = getInitials(trimmedName);
-            const otherMembersInitials = members
-                .filter((_, i) => i !== index)
-                .map(m => getInitials(m.name));
-
-            if (otherMembersInitials.includes(newInitials)) {
-                // We'll allow typing, but maybe highlight it? 
-                // For simplicity here, we'll just let them edit but handle the conflict in handleUpdate
-                // Or prevent the change if it conflicts. Let's prevent it to be consistent.
-                // However, while typing it's annoying. Let's check on Blur or Update.
-            }
-        }
         const newMembers = [...members];
         newMembers[index].name = newName;
         setMembers(newMembers);
@@ -139,7 +131,6 @@ const EditGroupSheet: React.FC<EditGroupSheetProps> = ({ group, onUpdateGroup, o
 
     const handleUpdate = () => {
         if (groupName.trim() && members.length >= 2) {
-            // Final check for unique initials before saving
             const initialsSet = new Set();
             for (const m of members) {
                 const initials = getInitials(m.name);
@@ -155,10 +146,76 @@ const EditGroupSheet: React.FC<EditGroupSheetProps> = ({ group, onUpdateGroup, o
         }
     };
 
+    const handleShare = async () => {
+        if (!pdfReportRef.current) return;
+        setIsGeneratingPDF(true);
+
+        try {
+            // Wait a brief moment for any layout to stabilize
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            const canvas = await html2canvas(pdfReportRef.current, {
+                scale: 2, // Retain quality
+                backgroundColor: '#000000',
+                logging: false,
+                useCORS: true
+            });
+
+            const imgData = canvas.toDataURL('image/jpeg', 0.9);
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'px',
+                format: [canvas.width, canvas.height] // Match canvas size exactly
+            });
+
+            pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
+
+            const filename = `${groupName.replace(/[^a-z0-9]/gi, '_')}_Summary.pdf`;
+            const pdfBlob = pdf.output('blob');
+            const pdfFile = new File([pdfBlob], filename, { type: 'application/pdf' });
+
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+                try {
+                    await navigator.share({
+                        files: [pdfFile],
+                        title: `${groupName} Summary`,
+                        text: 'Here is the expense report for our group.',
+                    });
+                } catch (err) {
+                    // Start download if share was canceled or failed
+                    if ((err as Error).name !== 'AbortError') {
+                        pdf.save(filename);
+                    }
+                }
+            } else {
+                // Fallback to direct download
+                pdf.save(filename);
+            }
+
+        } catch (error) {
+            console.error("PDF Generation failed", error);
+            alert("Failed to generate PDF report.");
+        } finally {
+            setIsGeneratingPDF(false);
+        }
+    };
+
     const canUpdate = groupName.trim() && members.length >= 2;
+    const totalExpense = expenses.reduce((sum, e) => sum + e.amount, 0);
 
     return (
         <>
+            {/* Hidden PDF Report Container */}
+            <div className="fixed left-[-9999px] top-0 overflow-visible">
+                <PDFReport
+                    ref={pdfReportRef}
+                    group={{ ...group, name: groupName, members: members as any }}
+                    expenses={expenses}
+                    settlements={settlements}
+                    totalExpense={totalExpense}
+                />
+            </div>
+
             {/* Beige Backdrop */}
             <div
                 className={`fixed inset-0 z-40 transition-opacity duration-500 ease-out-quint ${!isVisible || isClosing ? 'opacity-0' : 'opacity-100'}`}
@@ -178,13 +235,27 @@ const EditGroupSheet: React.FC<EditGroupSheetProps> = ({ group, onUpdateGroup, o
                     transitionTimingFunction: 'cubic-bezier(0.19, 1, 0.22, 1)',
                 }}
             >
-                {/* Red Header Banner Portion */}
-                {/* Header Banner Portion - Black & Left Aligned */}
+                {/* Header Banner Portion - Black & Left/Right Aligned */}
                 <div
-                    className="w-full py-6 px-6 relative flex items-center justify-start shrink-0 bg-black"
-                    onClick={handleClose}
+                    className="w-full py-6 px-6 relative flex items-center justify-between shrink-0 bg-black"
                 >
-                    <h2 className="text-label text-xs text-prowess-beige tracking-widest uppercase">EDIT GROUP</h2>
+                    <h2 onClick={handleClose} className="text-label text-xs text-prowess-beige tracking-widest uppercase cursor-pointer">EDIT GROUP</h2>
+
+                    {/* Share Button */}
+                    <button
+                        onClick={handleShare}
+                        disabled={isGeneratingPDF}
+                        className="text-prowess-beige hover:opacity-70 transition-opacity flex items-center gap-2"
+                    >
+                        {isGeneratingPDF ? (
+                            <span className="text-label text-[10px] tracking-widest uppercase animate-pulse">GENERATING PDF...</span>
+                        ) : (
+                            <div className="flex items-center gap-2">
+                                <span className="text-label text-[10px] tracking-widest uppercase">SHARE</span>
+                                <Share size={18} />
+                            </div>
+                        )}
+                    </button>
                 </div>
 
                 {/* Black Content Area */}

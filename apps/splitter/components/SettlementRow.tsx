@@ -1,3 +1,4 @@
+import { useState, useRef } from 'react';
 import { Member } from '../../../types';
 import Avatar from './Avatar';
 
@@ -6,6 +7,8 @@ interface SettlementRowProps {
   to: Member;
   amount: number;
   currency: string;
+  onLongPress?: () => void;
+  isPending?: boolean;
 }
 
 /**
@@ -16,17 +19,56 @@ interface SettlementRowProps {
  * - Left line is straight
  * - Right line has arrow pointing to recipient
  * - Uses Avatar component for consistent styling
+ * - Supports long-press to mark as settled (pending settlements only)
  */
 const SettlementRow: React.FC<SettlementRowProps> = ({
   from,
   to,
   amount,
   currency,
+  onLongPress,
+  isPending = false,
 }) => {
+  const [isPressed, setIsPressed] = useState(false);
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+
+  const handleTouchStart = () => {
+    if (!onLongPress || !isPending) return;
+
+    setIsPressed(true);
+    longPressTimer.current = setTimeout(() => {
+      setIsPressed(false);
+      onLongPress();
+    }, 500); // 500ms long press threshold
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+    setIsPressed(false);
+  };
+
+  const handleTouchCancel = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+    setIsPressed(false);
+  };
+
   return (
     <div
-      className="flex flex-col py-6 px-4 border-b border-black"
+      className={`flex flex-col py-6 px-4 border-b border-black transition-transform duration-200 ${isPressed ? 'scale-[0.98]' : 'scale-100'
+        }`}
       style={{ backgroundColor: '#1F1A17' }}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchCancel}
+      onMouseDown={handleTouchStart}
+      onMouseUp={handleTouchEnd}
+      onMouseLeave={handleTouchCancel}
     >
       <div className="flex flex-col gap-2 w-full">
         {/* Top Row: visual flow */}

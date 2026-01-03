@@ -112,6 +112,20 @@ const GroupDetail: React.FC<GroupDetailProps> = ({
     }
   };
 
+  const handleSettleDebt = (debt: Debt) => {
+    if (!onAddSettlement) return;
+
+    // Create a settlement record from the debt
+    const settlement: Omit<Settlement, 'id'> = {
+      paidBy: debt.from,
+      paidTo: debt.to,
+      amount: debt.amount,
+      date: new Date().toISOString()
+    };
+
+    onAddSettlement(settlement);
+  };
+
   const tabs = [
     {
       id: 'settlements',
@@ -124,6 +138,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({
           settlements={settlements}
           onNewSettlement={() => setShowAddSettlement(true)}
           onSettlementClick={setSelectedSettlement}
+          onSettleDebt={handleSettleDebt}
         />
       ),
     },
@@ -270,6 +285,14 @@ const GroupDetail: React.FC<GroupDetailProps> = ({
       {showEditGroup && onUpdateGroup && (
         <EditGroupSheet
           group={group}
+          expenses={group.expenses.filter(e => e.category !== 'settlement')}
+          settlements={settlements.map(s => ({
+            id: s.id,
+            from: s.paidBy,
+            to: s.paidTo,
+            amount: s.amount,
+            currency: currency
+          }))}
           onUpdateGroup={onUpdateGroup}
           onClose={() => setShowEditGroup(false)}
         />
